@@ -73,7 +73,7 @@ def run_comparison(splits: dict, cfg: dict, device: torch.device) -> None:
     # ── Baseline 5: Path Signatures ───────────────────────────────────────────
     logger.info("=" * 60)
     logger.info("BASELINE 5: Path Signatures + XGBoost (Morrill et al., 2020)")
-    sig = train_signature(splits, cfg, depth=3)
+    sig = train_signature(splits, cfg, depth=2)
     rows.append({"method": "Path Signatures + XGBoost", "type": "Challenge winner",
                  **_fmt(sig["test"])})
 

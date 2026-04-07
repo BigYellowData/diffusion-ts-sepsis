@@ -26,7 +26,13 @@ try:
 except ImportError:
     ESIG_AVAILABLE = False
 
+from ..data.preprocess import VITAL_COLS, FEATURE_COLS
 from ..utils.metrics import compute_metrics, optimal_threshold
+
+# Indices des signes vitaux dans FEATURE_COLS (8 features au lieu de 40)
+# Depth=2 avec 8 features → 8 + 64 = 72 dimensions (gérable)
+# Depth=2 avec 40 features → 40 + 1600 = 1640 dimensions → 606 MB pour 92k samples
+VITAL_IDX = [FEATURE_COLS.index(c) for c in VITAL_COLS]
 
 logger = logging.getLogger(__name__)
 
@@ -54,28 +60,35 @@ def _compute_signatures(X: np.ndarray, depth: int = 3) -> np.ndarray:
     return sigs
 
 
-def _extract_features(X: np.ndarray, M: np.ndarray, depth: int = 3) -> np.ndarray:
+def _extract_features(X: np.ndarray, M: np.ndarray, depth: int = 2) -> np.ndarray:
     """
     Combine signatures + features agrégées + taux de valeurs manquantes.
     X : (N, T, F),  M : (N, T, F)
-    """
-    logger.info(f"[Signature] Computing path signatures (depth={depth}) on {len(X)} samples…")
 
-    # Agrégats classiques
-    mean = X.mean(axis=1)
+    On calcule les signatures uniquement sur les 8 signes vitaux (comme Morrill et al.)
+    pour éviter l'explosion dimensionnelle :
+      depth=2, F=8  →  8 + 64 = 72 dimensions de signature
+      depth=2, F=40 →  40 + 1600 = 1640 dim → 606 MB pour 92k samples (OK)
+      depth=3, F=40 →  65640 dim → 22 GB (OOM)
+    """
+    logger.info(f"[Signature] Computing path signatures (depth={depth}, vitals only) on {len(X)} samples…")
+
+    # Agrégats sur toutes les features
+    mean = X.mean(axis=1)                        # (N, F)
     std  = X.std(axis=1)
     last = X[:, -1, :]
     miss = 1.0 - M.mean(axis=1)
 
-    # Signatures (feature principale)
-    sigs = _compute_signatures(X, depth=depth)
+    # Signatures sur les signes vitaux uniquement
+    X_vital = X[:, :, VITAL_IDX]                 # (N, T, 8)
+    sigs = _compute_signatures(X_vital, depth=depth)
 
     return np.concatenate([sigs, mean, std, last, miss], axis=1).astype(np.float32)
 
 
 # ─── Entraînement ─────────────────────────────────────────────────────────────
 
-def train_signature(splits: dict, cfg: dict, depth: int = 3) -> dict:
+def train_signature(splits: dict, cfg: dict, depth: int = 2) -> dict:
     """
     Entraîne un classifieur XGBoost sur features de signatures.
     Utilise uniquement les données labellées (comme Morrill et al.).

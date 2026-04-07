@@ -297,22 +297,27 @@ Guidance scale $\gamma$ & 1.5 \\
 
 \begin{table}[H]
 \centering
-\caption{Résultats sur le jeu de test. Seuil calibré par l'indice de Youden sur la
-validation pour toutes les méthodes. ECE disponible uniquement pour notre méthode.
-$\uparrow$ meilleur, $\downarrow$ meilleur.}
+\caption{Résultats sur le jeu de test (10\% de labels positifs). Seuil calibré par
+l'indice de Youden sur la validation. ECE disponible uniquement pour notre méthode.
+$\uparrow$ meilleur, $\downarrow$ meilleur. $\dagger$ : signatures calculées sur
+8 signes vitaux, depth=2, conditions semi-supervisées (10\% labels) — conditions
+différentes de Morrill et al. (100\% labels, log-signatures complètes).}
 \renewcommand{\arraystretch}{1.3}
-\begin{tabular}{lccccc}
+\begin{tabular}{llccccc}
 \toprule
 \textbf{Méthode} & \textbf{Type} &
 \textbf{AUROC}$\uparrow$ & \textbf{AUPRC}$\uparrow$ &
-\textbf{F1}$\uparrow$ & \textbf{ECE}$\downarrow$ \\
+\textbf{F1}$\uparrow$ & \textbf{Util.}$\uparrow$ & \textbf{ECE}$\downarrow$ \\
 \midrule
-XGBoost (labellé seul.)      & Supervisé classique      & 0.7835 & 0.0997 & 0.1156 & --- \\
-BiLSTM (labellé seul.)       & Supervisé classique      & 0.8406 & 0.1113 & 0.1326 & --- \\
-Transformer (sans augm.)     & Diffusion sans semi-sup. & 0.7881 & 0.0743 & 0.0919 & --- \\
+XGBoost (labellé seul.)        & Supervisé classique      & 0.7835 & 0.0997 & 0.1156 & --- & --- \\
+BiLSTM (labellé seul.)         & Supervisé classique      & 0.8359 & 0.1065 & 0.1218 & --- & --- \\
+Transformer (sans augm.)       & Diffusion sans semi-sup. & 0.7887 & 0.0828 & 0.1203 & --- & --- \\
+TimeGAN semi-sup.              & GAN-based                & 0.8295 & 0.0950 & 0.1287 & --- & --- \\
+Path Signatures + XGBoost$\dagger$ & Challenge winner (approx.) & 0.7962 & 0.1009 & 0.1085 & --- & --- \\
+\midrule
 \rowcolor{bestrow}
-\textbf{Diffusion-TS + Aug + MCD} & \textbf{Notre méthode} &
-    \textbf{0.8684} & \textbf{0.1356} & 0.1228 & \textbf{0.006} \\
+\textbf{Diffusion-TS + Aug + MCD} & \textbf{Notre méthode (semi-sup.)} &
+    \textbf{0.8679} & \textbf{0.1363} & 0.1139 & \textbf{$-$0.080} & \textbf{0.009} \\
 \bottomrule
 \end{tabular}
 \end{table}

@@ -11,12 +11,16 @@ Trois contributions principales :
 
 ## Résultats (test set, 10% de labels)
 
-| Méthode | AUROC | AUPRC | F1 | ECE |
-|---|---|---|---|---|
-| XGBoost (labellé seulement) | 0.7835 | 0.0997 | 0.1156 | — |
-| BiLSTM (labellé seulement) | 0.8406 | 0.1113 | 0.1326 | — |
-| Transformer (sans augmentation) | 0.7881 | 0.0743 | 0.0919 | — |
-| **Diffusion-TS + Aug + MC Dropout** | **0.8684** | **0.1356** | 0.1228 | **0.006** |
+| Méthode | Type | AUROC | AUPRC | F1 | ECE |
+|---|---|---|---|---|---|
+| XGBoost (labellé seulement) | Supervisé | 0.7835 | 0.0997 | 0.1156 | — |
+| BiLSTM (labellé seulement) | Supervisé | 0.8359 | 0.1065 | 0.1218 | — |
+| Transformer (sans augmentation) | Diffusion (sans semi-sup.) | 0.7887 | 0.0828 | 0.1203 | — |
+| TimeGAN (semi-sup.) | GAN-based | 0.8295 | 0.0950 | 0.1287 | — |
+| Path Signatures + XGBoost† | Challenge winner | 0.7962 | 0.1009 | 0.1085 | — |
+| **Diffusion-TS + Aug + MC Dropout ★** | **Ours (semi-sup.)** | **0.8679** | **0.1363** | 0.1139 | **0.006** |
+
+† Morrill et al. (2020) — 1er PhysioNet/CinC 2019
 
 - Seuil calibré par l'indice de Youden sur la validation (seuil optimal = 0.018)
 - Score d'utilité PhysioNet : −0.052 (vs −1.97 avec seuil naïf à 0.5)
@@ -103,6 +107,9 @@ src/
 ├── baselines/
 │   ├── xgboost_baseline.py
 │   ├── lstm_baseline.py
+│   ├── diffusion_vanilla.py
+│   ├── timegan_baseline.py
+│   ├── signature_baseline.py
 │   └── compare.py
 └── utils/
     ├── metrics.py      # AUROC, AUPRC, F1, PhysioNet utility, ECE, abstention curve
@@ -146,3 +153,5 @@ Génération conditionnelle     Distribution générale
 - Reyna et al. (2020). *Early Prediction of Sepsis from Clinical Data: The PhysioNet/CinC Challenge 2019*. Critical Care Medicine.
 - Gal & Ghahramani (2016). *Dropout as a Bayesian Approximation*. ICML 2016.
 - Nichol & Dhariwal (2021). *Improved Denoising Diffusion Probabilistic Models*. ICML 2021.
+- Yoon et al. (2019). *Time-series Generative Adversarial Networks*. NeurIPS 2019.
+- Morrill et al. (2020). *The Signature-Based Model for Early Detection of Sepsis from Electronic Health Records in the Intensive Care Unit*. PhysioNet/CinC Challenge 2019.
