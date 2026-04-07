@@ -1,0 +1,31 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+.venv/
+
+# Data & checkpoints (trop lourds pour git)
+data/raw/
+data/processed/
+checkpoints/
+checkpoints_test/
+logs/
+logs_test/
+results/
+
+# Jupyter
+.ipynb_checkpoints/
+*.ipynb
+
+# IDE
+.vscode/
+.idea/
+
+# uv / pip
+*.egg-info/
+dist/
+build/
+
+# OS
+.DS_Store
+Thumbs.db

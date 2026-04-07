@@ -1,0 +1,60 @@
+# ─── Data ────────────────────────────────────────────────────────────────────
+data:
+  raw_dir: "data/raw/sepsis"
+  processed_dir: "data/processed"
+  window_size: 24          # hours of history per sample
+  step_size: 6             # sliding window stride (hours)
+  label_ratio: 0.10        # fraction of positive patients used as labelled (5/10/25/50%)
+  val_ratio: 0.10
+  test_ratio: 0.15
+  seed: 42
+
+# ─── Diffusion Model ─────────────────────────────────────────────────────────
+diffusion:
+  n_features: 40           # number of clinical variables
+  seq_len: 24              # time steps (= window_size)
+  d_model: 128             # Transformer hidden dim
+  n_heads: 8
+  n_layers: 4
+  d_ff: 256
+  dropout: 0.1             # used both for regularisation and MC Dropout
+  n_diffusion_steps: 1000
+  beta_start: 1.0e-4
+  beta_end: 0.02
+  scheduler: "cosine"      # "linear" or "cosine"
+  # Conditional generation
+  cond_guidance_scale: 1.0
+
+# ─── Classifier ──────────────────────────────────────────────────────────────
+classifier:
+  d_model: 128
+  n_heads: 8
+  n_layers: 3
+  d_ff: 256
+  dropout: 0.2             # MC Dropout rate (kept active at inference)
+  mc_samples: 50           # stochastic forward passes for uncertainty
+
+# ─── Training ────────────────────────────────────────────────────────────────
+training:
+  # Diffusion pre-training
+  diffusion_epochs: 100
+  diffusion_lr: 2.0e-4
+  diffusion_batch_size: 64
+  diffusion_warmup_steps: 500
+
+  # Classifier fine-tuning
+  classifier_epochs: 50
+  classifier_lr: 1.0e-4
+  classifier_batch_size: 64
+  class_weight_beta: 0.9999  # effective number of samples weighting
+
+  checkpoint_dir: "checkpoints"
+  log_dir: "logs"
+
+# ─── Generation ──────────────────────────────────────────────────────────────
+generation:
+  n_synthetic_per_real: 3   # synthetic minority samples per real positive
+  guidance_scale: 1.5
+
+# ─── Device ──────────────────────────────────────────────────────────────────
+device: "cuda"              # fallback to "cpu" automatically if no GPU
