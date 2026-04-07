@@ -22,6 +22,17 @@ Trois contributions principales :
 - Score d'utilité PhysioNet : −0.052 (vs −1.97 avec seuil naïf à 0.5)
 - Variance MC Dropout : ×7.4 plus élevée sur les erreurs → incertitude corrélée aux erreurs
 
+### Ablation : ratio de labels
+
+| Ratio | Labels (+) | AUROC | AUPRC | F1 | ECE |
+|---|---|---|---|---|---|
+| 5% | 108 | 0.8642 | 0.1443 | 0.1410 | 0.0170 |
+| **10%** | **215** | **0.8684** | 0.1356 | 0.1228 | **0.0058** |
+| 25% | 539 | 0.8669 | **0.1484** | 0.1153 | 0.0179 |
+| 50% | 1078 | 0.8679 | 0.1363 | 0.1139 | 0.0088 |
+
+> L'AUROC varie de seulement **0.004 points** sur toute la plage 5–50% : la représentation apprise par diffusion sur les données non-labellées est suffisante, le guidage conditionnel est secondaire.
+
 ---
 
 ## Dataset
