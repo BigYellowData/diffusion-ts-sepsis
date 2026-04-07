@@ -317,7 +317,7 @@ Path Signatures + XGBoost$\dagger$ (Morrill et al.) & 0.7962 & 0.1009 & 0.1085 &
 \midrule
 \rowcolor{bestrow}
 \textbf{Diffusion-TS + Aug + MC Dropout (ours)} &
-    \textbf{0.8679} & \textbf{0.1363} & 0.1139 & \textbf{$-$0.052} & \textbf{0.006} \\
+    \textbf{0.8679} & \textbf{0.1363} & 0.1139 & \textbf{$-$0.080} & \textbf{0.009} \\
 \bottomrule
 \end{tabular}}
 \end{table}
@@ -349,13 +349,13 @@ La courbe PR est la métrique principale pour les données fortement déséquili
 \toprule
 \textbf{Métrique} & \textbf{Valeur} \\
 \midrule
-ECE (Expected Calibration Error) & 0.0058 \\
-Brier score                      & 0.0202 \\
-Score d'utilité PhysioNet        & $-0.052$ \\
-Corrélation incertitude--erreur  & 0.269 \\
-Variance MC --- prédictions correctes   & $2.20 \times 10^{-4}$ \\
-Variance MC --- prédictions incorrectes & $1.62 \times 10^{-3}$ \\
-Seuil optimal (Youden, val set)  & 0.0179 \\
+ECE (Expected Calibration Error) & 0.0088 \\
+Brier score                      & 0.0203 \\
+Score d'utilité PhysioNet        & $-0.080$ \\
+Corrélation incertitude--erreur  & 0.258 \\
+Variance MC --- prédictions correctes   & $2.12 \times 10^{-4}$ \\
+Variance MC --- prédictions incorrectes & $1.39 \times 10^{-3}$ \\
+Seuil optimal (Youden, val set)  & 0.0178 \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -377,7 +377,7 @@ Seuil optimal (Youden, val set)  & 0.0179 \\
 \textbf{Gauche :} le modèle est bien calibré (la courbe orange suit la diagonale),
 et les probabilités prédites pour les cas sepsis se concentrent au-dessus de 0.1,
 distinctes des non-sepsis ($<$0.05). \textbf{Droite :} la variance MC Dropout
-des prédictions incorrectes est 7.4$\times$ supérieure à celle des prédictions
+des prédictions incorrectes est 6.6$\times$ supérieure à celle des prédictions
 correctes, validant l'utilité clinique du score d'incertitude.}
 \end{figure}
 
@@ -437,11 +437,11 @@ pénalise marginalement le F1 à seuil fixe.
 
 \subsection{Qualité de la calibration et incertitude}
 
-L'ECE de \textbf{0.006} indique une calibration quasi-parfaite, propriété essentielle
-en milieu clinique. La corrélation incertitude--erreur de \textbf{0.269} confirme
+L'ECE de \textbf{0.009} indique une très bonne calibration, propriété essentielle
+en milieu clinique. La corrélation incertitude--erreur de \textbf{0.258} confirme
 l'utilité du MC Dropout : la variance sur les prédictions incorrectes est
-\textbf{7.4 fois plus élevée} que sur les correctes ($1.62\times10^{-3}$ vs
-$2.20\times10^{-4}$).
+\textbf{6.6 fois plus élevée} que sur les correctes ($1.39\times10^{-3}$ vs
+$2.12\times10^{-4}$).
 
 \subsection{Robustesse au ratio de labels}
 
@@ -472,8 +472,8 @@ les patterns cliniques réels.
 
 \subsection{Score d'utilité clinique PhysioNet}
 
-Le score de \textbf{$-0.052$} est très proche de zéro (vs $-1.97$ avec seuil par défaut
-de 0.5). Le seuil optimal de 0.0179 reflète le déséquilibre asymétrique de la fonction
+Le score de \textbf{$-0.080$} est très proche de zéro (vs $-1.97$ avec seuil par défaut
+de 0.5). Le seuil optimal de 0.0178 reflète le déséquilibre asymétrique de la fonction
 de coût clinique : pénalité FN = $-2.0$, pénalité FP = $-0.05$.
 
 \subsection{Limitations}
@@ -500,7 +500,7 @@ Les trois contributions sont validées expérimentalement :
     \item \textbf{L'augmentation par diffusion améliore significativement la classification}
     (+8 pts AUROC vs Transformer vanilla, +2.8 pts vs BiLSTM supervisé).
     \item \textbf{Le MC Dropout produit des scores d'incertitude utiles} : variance
-    7.4$\times$ plus élevée sur les erreurs, ECE = 0.006.
+    6.6$\times$ plus élevée sur les erreurs, ECE = 0.009.
     \item \textbf{La diffusion surpasse les GAN-based} en stabilité d'entraînement,
     sans effondrement de mode ni oscillation de la loss.
 \end{enumerate}

@@ -18,13 +18,13 @@ Trois contributions principales :
 | Transformer (sans augmentation) | Diffusion (sans semi-sup.) | 0.7887 | 0.0828 | 0.1203 | — |
 | TimeGAN (semi-sup.) | GAN-based | 0.8295 | 0.0950 | 0.1287 | — |
 | Path Signatures + XGBoost† | Challenge winner | 0.7962 | 0.1009 | 0.1085 | — |
-| **Diffusion-TS + Aug + MC Dropout ★** | **Ours (semi-sup.)** | **0.8679** | **0.1363** | 0.1139 | **0.006** |
+| **Diffusion-TS + Aug + MC Dropout ★** | **Ours (semi-sup.)** | **0.8679** | **0.1363** | 0.1139 | **0.009** |
 
 † Morrill et al. (2020) — 1er PhysioNet/CinC 2019
 
 - Seuil calibré par l'indice de Youden sur la validation (seuil optimal = 0.018)
-- Score d'utilité PhysioNet : −0.052 (vs −1.97 avec seuil naïf à 0.5)
-- Variance MC Dropout : ×7.4 plus élevée sur les erreurs → incertitude corrélée aux erreurs
+- Score d'utilité PhysioNet : −0.080 (vs −1.97 avec seuil naïf à 0.5)
+- Variance MC Dropout : ×6.6 plus élevée sur les erreurs → incertitude corrélée aux erreurs
 
 ### Ablation : ratio de labels
 
