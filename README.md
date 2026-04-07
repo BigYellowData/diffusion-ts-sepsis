@@ -82,6 +82,7 @@ uv run python main.py --stage diffusion    # ~25 min (100 epochs, RTX 4060 Ti)
 uv run python main.py --stage classifier   # ~15 min avec early stopping
 uv run python main.py --stage evaluate     # MC Dropout, 50 passes
 uv run python main.py --stage compare      # Comparaison avec les baselines
+uv run python main.py --stage plots       # Génère les figures (figures/)
 
 # Changer le ratio de labels (semi-supervisé)
 uv run python main.py --stage all --label_ratio 0.05   # 5% de labels
@@ -113,7 +114,8 @@ src/
 │   └── compare.py
 └── utils/
     ├── metrics.py      # AUROC, AUPRC, F1, PhysioNet utility, ECE, abstention curve
-    └── uncertainty.py  # Évaluation MC Dropout, corrélation incertitude–erreur
+    ├── uncertainty.py  # Évaluation MC Dropout, corrélation incertitude–erreur
+    └── plots.py        # Génération des figures (ROC, PR, calibration, abstention)
 ```
 
 ---
