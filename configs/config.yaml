@@ -48,6 +48,7 @@ training:
   classifier_batch_size: 64
   class_weight_beta: 0.9999  # effective number of samples weighting
 
+  early_stopping_patience: 10
   checkpoint_dir: "checkpoints"
   log_dir: "logs"
 

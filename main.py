@@ -108,6 +108,12 @@ def stage_classifier(cfg: dict, data: dict, device: torch.device) -> None:
     )
 
 
+def stage_compare(cfg: dict, data: dict, device: torch.device) -> None:
+    from src.baselines.compare import run_comparison
+    logger.info("=== STAGE: Baseline comparison ===")
+    run_comparison(data["splits"], cfg, device)
+
+
 def stage_evaluate(cfg: dict, data: dict, device: torch.device) -> None:
     from src.models.classifier import SepsisClassifier
     from src.data.dataset import build_dataloaders
@@ -134,12 +140,13 @@ def stage_evaluate(cfg: dict, data: dict, device: torch.device) -> None:
     classifier.load_state_dict(torch.load(ckpt, map_location=device))
     classifier.to(device)
 
-    # MC Dropout evaluation on test set
+    # MC Dropout evaluation on test set (threshold calibrated on val set)
     results = evaluate_with_uncertainty(
         classifier,
         loaders["test"],
         device,
         n_mc_samples=clf_cfg["mc_samples"],
+        val_loader=loaders["val"],
     )
 
     # Uncertainty–error correlation
@@ -155,6 +162,7 @@ def stage_evaluate(cfg: dict, data: dict, device: torch.device) -> None:
     print("\n" + "=" * 50)
     print("TEST SET RESULTS")
     print("=" * 50)
+    print(f"  Threshold      : {m.get('threshold', 0.5):.4f}  (Youden, calibrated on val)")
     print(f"  AUROC          : {m['auroc']:.4f}")
     print(f"  AUPRC          : {m['auprc']:.4f}")
     print(f"  F1             : {m['f1']:.4f}")
@@ -173,7 +181,7 @@ def parse_args():
     parser = argparse.ArgumentParser(description="Sepsis Prediction Pipeline")
     parser.add_argument(
         "--stage",
-        choices=["preprocess", "diffusion", "classifier", "evaluate", "all"],
+        choices=["preprocess", "diffusion", "classifier", "evaluate", "compare", "all"],
         default="all",
         help="Pipeline stage to run",
     )
@@ -205,7 +213,7 @@ def main():
     if args.stage in ("preprocess", "all"):
         data = stage_preprocess(cfg)
 
-    if args.stage in ("diffusion", "classifier", "evaluate", "all"):
+    if args.stage in ("diffusion", "classifier", "evaluate", "compare", "all"):
         if data is None:
             data = stage_preprocess(cfg)   # loads from cache if available
 
@@ -217,6 +225,9 @@ def main():
 
     if args.stage in ("evaluate", "all"):
         stage_evaluate(cfg, data, device)
+
+    if args.stage == "compare":
+        stage_compare(cfg, data, device)
 
 
 if __name__ == "__main__":

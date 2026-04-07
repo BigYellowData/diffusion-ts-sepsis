@@ -17,9 +17,31 @@ import torch
 from torch.utils.data import DataLoader
 
 from ..models.classifier import SepsisClassifier, mc_predict
-from .metrics import full_evaluation
+from .metrics import full_evaluation, optimal_threshold
 
 logger = logging.getLogger(__name__)
+
+
+def _collect_mc_probs(
+    classifier: SepsisClassifier,
+    loader: DataLoader,
+    device: torch.device,
+    n_mc_samples: int,
+) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+    all_probs, all_uncertainties, all_labels = [], [], []
+    for batch in loader:
+        x = batch["x"].to(device)
+        mask = batch["mask"].to(device)
+        y = batch["y"].numpy()
+        out = mc_predict(classifier, x, mask, n_samples=n_mc_samples)
+        all_probs.append(out["mean_prob"].cpu().numpy())
+        all_uncertainties.append(out["uncertainty"].cpu().numpy())
+        all_labels.append(y)
+    return (
+        np.concatenate(all_labels),
+        np.concatenate(all_probs),
+        np.concatenate(all_uncertainties),
+    )
 
 
 @torch.no_grad()
@@ -28,9 +50,13 @@ def evaluate_with_uncertainty(
     loader: DataLoader,
     device: torch.device,
     n_mc_samples: int = 50,
+    val_loader: DataLoader | None = None,
 ) -> dict:
     """
     Run MC Dropout inference on a full DataLoader.
+
+    If val_loader is provided, the decision threshold is calibrated on the
+    validation set (Youden's J) before being applied to the test set.
 
     Returns:
         {
@@ -40,23 +66,16 @@ def evaluate_with_uncertainty(
           "metrics"      : dict from full_evaluation()
         }
     """
-    all_probs, all_uncertainties, all_labels = [], [], []
+    # Calibrate threshold on validation set
+    threshold = None
+    if val_loader is not None:
+        val_y, val_prob, _ = _collect_mc_probs(classifier, val_loader, device, n_mc_samples)
+        threshold = optimal_threshold(val_y, val_prob)
+        logger.info(f"[MC Dropout] Optimal threshold from val set: {threshold:.4f}")
 
-    for batch in loader:
-        x = batch["x"].to(device)
-        mask = batch["mask"].to(device)
-        y = batch["y"].numpy()
+    y_true, mean_prob, uncertainty = _collect_mc_probs(classifier, loader, device, n_mc_samples)
 
-        out = mc_predict(classifier, x, mask, n_samples=n_mc_samples)
-        all_probs.append(out["mean_prob"].cpu().numpy())
-        all_uncertainties.append(out["uncertainty"].cpu().numpy())
-        all_labels.append(y)
-
-    y_true = np.concatenate(all_labels)
-    mean_prob = np.concatenate(all_probs)
-    uncertainty = np.concatenate(all_uncertainties)
-
-    metrics = full_evaluation(y_true, mean_prob, uncertainty)
+    metrics = full_evaluation(y_true, mean_prob, uncertainty, threshold=threshold)
     logger.info(
         f"[MC Dropout] AUROC={metrics['auroc']:.4f} | "
         f"AUPRC={metrics['auprc']:.4f} | "

@@ -56,10 +56,8 @@ def augment_with_diffusion(
     Generate synthetic sepsis samples and return an augmented DataLoader.
     """
     gen_cfg = cfg["generation"]
-    # Count real positives in the training set
-    n_real_pos = sum(
-        batch["y"].sum().item() for batch in train_loader
-    )
+    # Count real positives directly from the dataset (not the sampler)
+    n_real_pos = int(train_loader.dataset.y.sum().item())
     n_synthetic = int(n_real_pos * gen_cfg["n_synthetic_per_real"])
     logger.info(f"[Augment] Generating {n_synthetic} synthetic sepsis samples…")
 
@@ -148,6 +146,8 @@ def train_classifier(
     classifier.to(device)
     best_auroc = 0.0
     best_ckpt = os.path.join(save_dir, "classifier_best.pt")
+    patience = cfg["training"].get("early_stopping_patience", 10)
+    epochs_no_improve = 0
 
     for epoch in range(1, epochs + 1):
         # ── Training ──────────────────────────────────────────────────────────
@@ -180,7 +180,13 @@ def train_classifier(
 
         if metrics["auroc"] > best_auroc:
             best_auroc = metrics["auroc"]
+            epochs_no_improve = 0
             torch.save(classifier.state_dict(), best_ckpt)
+        else:
+            epochs_no_improve += 1
+            if epochs_no_improve >= patience:
+                logger.info(f"[Classifier] Early stopping at epoch {epoch} (no improvement for {patience} epochs)")
+                break
 
     logger.info(f"[Classifier] Training done. Best AUROC={best_auroc:.4f}")
     # Load best weights

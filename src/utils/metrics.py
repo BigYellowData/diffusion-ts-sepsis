@@ -16,24 +16,38 @@ from sklearn.metrics import (
     average_precision_score,
     f1_score,
     precision_recall_curve,
+    roc_curve,
     brier_score_loss,
 )
 
 
 # ─── Standard classification metrics ─────────────────────────────────────────
 
+def optimal_threshold(y_true: np.ndarray, y_prob: np.ndarray) -> float:
+    """Find the threshold that maximises Youden's J (sensitivity + specificity - 1)."""
+    fpr, tpr, thresholds = roc_curve(y_true, y_prob)
+    j_scores = tpr - fpr
+    return float(thresholds[np.argmax(j_scores)])
+
+
 def compute_metrics(
     y_true: np.ndarray,
     y_prob: np.ndarray,
-    threshold: float = 0.5,
+    threshold: float | None = None,
 ) -> dict:
-    """Compute AUROC, AUPRC, F1 at given threshold, Brier score."""
+    """
+    Compute AUROC, AUPRC, F1, Brier score.
+    If threshold is None, the optimal Youden threshold is used automatically.
+    """
+    if threshold is None:
+        threshold = optimal_threshold(y_true, y_prob)
     y_pred = (y_prob >= threshold).astype(int)
     return {
         "auroc": roc_auc_score(y_true, y_prob),
         "auprc": average_precision_score(y_true, y_prob),
         "f1": f1_score(y_true, y_pred, zero_division=0),
         "brier": brier_score_loss(y_true, y_prob),
+        "threshold": threshold,
     }
 
 
@@ -149,9 +163,11 @@ def full_evaluation(
     y_true: np.ndarray,
     y_prob: np.ndarray,
     uncertainty: np.ndarray | None = None,
-    threshold: float = 0.5,
+    threshold: float | None = None,
 ) -> dict:
     """Run all metrics and return a summary dict."""
+    if threshold is None:
+        threshold = optimal_threshold(y_true, y_prob)
     y_pred = (y_prob >= threshold).astype(int)
     results = compute_metrics(y_true, y_prob, threshold)
     results["physionet_utility"] = physionet_utility_score(y_true, y_pred)
