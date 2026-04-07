@@ -322,6 +322,24 @@ Path Signatures + XGBoost$\dagger$ & Challenge winner (approx.) & 0.7962 & 0.100
 \end{tabular}
 \end{table}
 
+\subsection{Courbes ROC et Précision-Rappel}
+
+\begin{figure}[H]
+\centering
+\begin{subfigure}[b]{0.48\textwidth}
+    \includegraphics[width=\textwidth]{figures/roc_curve.pdf}
+    \caption{Courbe ROC (AUROC = 0.8679)}
+\end{subfigure}
+\hfill
+\begin{subfigure}[b]{0.48\textwidth}
+    \includegraphics[width=\textwidth]{figures/pr_curve.pdf}
+    \caption{Courbe Précision-Rappel (AUPRC = 0.1363)}
+\end{subfigure}
+\caption{Performance de classification sur le jeu de test (18 807 fenêtres, 2.18\% positifs,
+seuil optimal = 0.018 calibré par l'indice de Youden sur la validation).
+La courbe PR est la métrique principale pour les données fortement déséquilibrées.}
+\end{figure}
+
 \subsection{Métriques d'incertitude (notre méthode, 10\% de labels)}
 
 \begin{table}[H]
@@ -341,6 +359,36 @@ Seuil optimal (Youden, val set)  & 0.0179 \\
 \bottomrule
 \end{tabular}
 \end{table}
+
+\subsection{Calibration et distribution de l'incertitude}
+
+\begin{figure}[H]
+\centering
+\begin{subfigure}[b]{0.56\textwidth}
+    \includegraphics[width=\textwidth]{figures/calibration.pdf}
+    \caption{Diagramme de fiabilité et distribution des probabilités (ECE = 0.006)}
+\end{subfigure}
+\hfill
+\begin{subfigure}[b]{0.42\textwidth}
+    \includegraphics[width=\textwidth]{figures/uncertainty_dist.pdf}
+    \caption{Variance MC Dropout : erreurs vs corrects (ratio = $\times$7.4)}
+\end{subfigure}
+\caption{Qualité de calibration et corrélation incertitude--erreur.
+\textbf{Gauche :} le modèle est bien calibré (la courbe orange suit la diagonale),
+et les probabilités prédites pour les cas sepsis se concentrent au-dessus de 0.1,
+distinctes des non-sepsis ($<$0.05). \textbf{Droite :} la variance MC Dropout
+des prédictions incorrectes est 7.4$\times$ supérieure à celle des prédictions
+correctes, validant l'utilité clinique du score d'incertitude.}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.55\textwidth]{figures/abstention.pdf}
+\caption{Courbe d'abstention : précision en fonction de la fraction d'échantillons
+conservés (les plus incertains sont écartés en premier). À 50\% de couverture
+(le modèle s'abstient sur la moitié la plus incertaine), la précision sur les
+alertes conservées est significativement supérieure à la précision de base (2.2\%).}
+\end{figure}
 
 \subsection{Ablation : impact du ratio de labels}
 

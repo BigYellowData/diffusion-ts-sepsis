@@ -114,6 +114,12 @@ def stage_compare(cfg: dict, data: dict, device: torch.device) -> None:
     run_comparison(data["splits"], cfg, device)
 
 
+def stage_plots() -> None:
+    from src.utils.plots import generate_all_plots
+    logger.info("=== STAGE: Generating figures ===")
+    generate_all_plots(results_dir="results")
+
+
 def stage_evaluate(cfg: dict, data: dict, device: torch.device) -> None:
     from src.models.classifier import SepsisClassifier
     from src.data.dataset import build_dataloaders
@@ -181,7 +187,7 @@ def parse_args():
     parser = argparse.ArgumentParser(description="Sepsis Prediction Pipeline")
     parser.add_argument(
         "--stage",
-        choices=["preprocess", "diffusion", "classifier", "evaluate", "compare", "all"],
+        choices=["preprocess", "diffusion", "classifier", "evaluate", "compare", "plots", "all"],
         default="all",
         help="Pipeline stage to run",
     )
@@ -228,6 +234,9 @@ def main():
 
     if args.stage == "compare":
         stage_compare(cfg, data, device)
+
+    if args.stage in ("plots", "all"):
+        stage_plots()
 
 
 if __name__ == "__main__":
