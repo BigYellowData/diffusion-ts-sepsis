@@ -16,6 +16,7 @@ dependencies = [
     "seaborn>=0.12.0",
     "einops>=0.6.0",
     "xgboost>=3.2.0",
+    "esig>=1.0.0",
 ]
 
 [dependency-groups]
