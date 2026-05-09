@@ -4,7 +4,7 @@ Adaptation de [Diffusion-TS](https://github.com/Y-debug-sys/Diffusion-TS) (ICLR 
 
 ## Comment ça marche
 
-L'objectif est un **classifieur** de sepsis robuste malgré le faible nombre de patients labellés (~2.3 % du dataset). On chaîne **deux modèles distincts** :
+L'objectif est de faire un **classifieur** de sepsis robuste malgré le faible nombre de patients labellés (~2.3 % du dataset). On chaîne **deux modèles distincts** :
 
 1. Un **modèle de diffusion** (Diffusion-TS) qui *génère* des trajectoires patients synthétiques étiquetées sepsis. Il est entraîné sur l'intégralité du dataset (labellé + non labellé) et exploite *Classifier-Free Guidance* pour conditionner sur la classe.
 2. Un **classifieur Transformer** qui *prédit* le sepsis sur les données réelles, augmentées par les synthétiques précédentes. Il intègre MC Dropout pour produire un score d'incertitude par échantillon.
