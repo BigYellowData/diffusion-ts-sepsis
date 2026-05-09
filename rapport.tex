@@ -148,8 +148,9 @@ quantification de l'incertitude bayésienne par Monte Carlo Dropout \cite{gal201
     sepsis qui rééquilibrent un classifieur Transformer.
     \item \textbf{Quantification de l'incertitude par MC Dropout} : production d'un score
     d'incertitude par échantillon, dont la corrélation avec l'erreur (variance
-    $\times 12.8$ plus élevée sur les prédictions incorrectes) permet une stratégie
-    d'abstention clinique.
+    $\times 12.8$ plus élevée sur les prédictions incorrectes, Pearson $r = 0.43$)
+    permet d'identifier en aval les cas où le modèle hésite et qui nécessitent
+    une vérification humaine.
 \end{enumerate}
 
 Sur le jeu de test (10~\% de labels), notre méthode atteint AUROC~=~0.868,
@@ -165,8 +166,9 @@ patients labellés. Pour y parvenir, nous chaînons deux modèles distincts : un
 diffusion qui \emph{génère} des trajectoires patients synthétiques étiquetées sepsis,
 suivi d'un classifieur Transformer qui \emph{prédit} le sepsis sur les données réelles
 augmentées par ces synthétiques. Cette séparation permet à la diffusion d'exploiter la
-totalité du dataset (labellé + non labellé) pour apprendre la structure des trajectoires,
-là où un classifieur supervisé classique se limiterait aux 10~\% labellés.
+totalité du dataset (labellé + non labellé) pour apprendre la structure des trajectoires
+patients, là où un classifieur supervisé classique ne peut tirer aucune information
+des 1 942 fenêtres positives dont l'étiquette est cachée (90~\% des positifs).
 
 Cette approche s'inspire conceptuellement du travail de Hirnschall \cite{hirnschall2025},
 qui applique un cadre similaire --- modèle génératif semi-supervisé augmenté d'une
@@ -218,7 +220,9 @@ conditionnel, $\gamma > 1$ accentue l'effet de la classe au prix de la diversit�
 Le modèle de diffusion est entraîné sur \textbf{toutes} les données (labellées et non
 labellées) pour apprendre la distribution générale des trajectoires patients. Le guidage
 conditionnel n'utilise que le sous-ensemble labellé (10~\% des positifs dans notre
-configuration principale, soit 215 patients sur 2 157).
+configuration principale, soit 215 \emph{fenêtres positives} sur 2 157 — issues
+d'environ 80--100 patients distincts, un patient septique générant typiquement 2 à 3
+fenêtres positives via le fenêtrage glissant).
 
 \subsection{Incertitude bayésienne via Monte Carlo Dropout}
 
@@ -494,15 +498,6 @@ des prédictions incorrectes est 12.8$\times$ supérieure à celle des prédicti
 correctes, validant l'utilité clinique du score d'incertitude.}
 \end{figure}
 
-\begin{figure}[H]
-\centering
-\includegraphics[width=0.55\textwidth]{figures/abstention.pdf}
-\caption{Courbe d'abstention : précision en fonction de la fraction d'échantillons
-conservés (les plus incertains sont écartés en premier). À 50\% de couverture
-(le modèle s'abstient sur la moitié la plus incertaine), la précision sur les
-alertes conservées est significativement supérieure à la précision de base (2.2\%).}
-\end{figure}
-
 \subsection{Visualisation des trajectoires synthétiques}
 
 Avant d'attribuer le gain de performance à la qualité des échantillons générés,
@@ -629,7 +624,7 @@ La comparaison entre le Transformer vanilla (AUROC = 0.789) et notre méthode
 (AUROC = 0.868) révèle un gain de \textbf{+7.9 points d'AUROC} dû exclusivement à
 l'augmentation par génération conditionnelle. Ce résultat démontre que Diffusion-TS
 produit des trajectoires patients synthétiques suffisamment réalistes pour entraîner
-un classifieur robuste avec seulement 215 exemples positifs labellés.
+un classifieur robuste avec seulement 215 fenêtres positives labellées.
 
 \subsection{Comparaison avec les baselines supervisées}
 
@@ -660,17 +655,21 @@ Le résultat le plus frappant de l'ablation est la \textbf{stabilité remarquabl
 Cela s'explique par l'architecture semi-supervisée : le modèle de diffusion apprend la
 distribution générale des trajectoires patients sur \emph{toutes} les données sans supervision,
 et le guidage conditionnel ne sert qu'à orienter la génération synthétique. Avec seulement
-\textbf{108 exemples positifs labellés (5\%)}, le système atteint déjà AUROC = 0.864.
+\textbf{108 fenêtres positives labellées (5\%)}, le système atteint déjà AUROC = 0.864.
 
-L'AUPRC culmine à 25\% (0.1484), suggérant que le rapport signal/bruit dans les données
-synthétiques générées est optimal à ce ratio. En dessous (5--10\%), les synthétiques sont
-moins fidèles faute de supervision ; au-dessus (50\%), le surplus de labels n'apporte pas
-de gain car la distribution est déjà bien capturée.
+L'AUPRC oscille entre 0.136 et 0.148 sans tendance monotone (5\% : 0.144, 10\% : 0.136,
+25\% : 0.148, 50\% : 0.136), avec le maximum atteint à 25\%. Le F1 culmine quant à lui
+à 5\% (0.141), pas au ratio le plus riche en labels. Cette absence de monotonie est
+\textbf{cohérente avec notre thèse centrale} : si la performance dépendait fortement
+du nombre de labels, on observerait une croissance régulière entre 5\% et 50\%. Au
+lieu de cela, la variation est faible et bruitée, ce qui confirme que la diffusion
+apprend l'essentiel de sa structure sur les 94 000 fenêtres non labellées, et que le
+guidage conditionnel n'apporte qu'un effet secondaire.
 
-L'ECE est minimale à 50\% (0.0058) — la configuration la mieux calibrée — tandis qu'à
-25\% on observe le plus mauvais ECE (0.0179) malgré la meilleure AUPRC. La calibration
-bayésienne du MC Dropout n'évolue donc pas de façon monotone avec le ratio de labels,
-mais reste partout inférieure à 0.02, ce qui demeure cliniquement acceptable.
+L'ECE varie aussi de façon non monotone (0.006 à 0.018 selon le ratio) mais reste
+partout inférieure à 0.02, ce qui demeure cliniquement acceptable. Les fluctuations
+ECE peuvent provenir de la stochasticité du training (un seul seed par ratio dans
+notre étude).
 
 \subsection{Entraînement et early stopping}
 
@@ -716,8 +715,11 @@ Les trois contributions sont validées expérimentalement :
     (+7.9 pts AUROC vs Transformer vanilla, +2.7 pts vs BiLSTM supervisé).
     \item \textbf{Le MC Dropout produit des scores d'incertitude utiles} : variance
     12.8$\times$ plus élevée sur les erreurs, ECE = 0.009.
-    \item \textbf{La diffusion surpasse les GAN-based} en stabilité d'entraînement,
-    sans effondrement de mode ni oscillation de la loss.
+    \item \textbf{La diffusion surpasse l'approche GAN sur cette tâche} : AUROC 0.868
+    contre 0.836 pour TimeGAN (semi-supervisé) à protocole identique, et la qualité
+    visuelle et statistique des trajectoires synthétiques (figures~\ref{fig:traj}
+    et~\ref{fig:dist}) confirme que les samples reproduisent les distributions
+    cliniques attendues.
 \end{enumerate}
 
 Code source, tests (76 tests, 100~\% de réussite) et instructions de reproduction :
