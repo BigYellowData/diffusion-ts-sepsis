@@ -578,11 +578,11 @@ Les unités : HR en battements/min, MAP et SBP en mmHg, Temp en °C, Lactate en 
 \textbf{$y_{\text{vrai}}$} & \textbf{$P(\text{sepsis})$} & \textbf{Var MC ($\times 10^{-3}$)} &
 \textbf{Décision} \\
 \midrule
-TP confiant      & 74--102 & 36.2--37.0 & 58--100 & non mesuré & sepsis & 0.1121 & 1.92  & SEPSIS \checkmark \\
-TN confiant      & 79--111 & 35.2--36.9 & 79--117 & non mesuré & sain   & 0.0005 & 0.00 & non-sepsis \checkmark \\
+TP confiant      & 79–100 & 37.1–38.0 & 67–109 & non mesuré & sepsis & 0.054 & 0.45  & SEPSIS \checkmark \\
+TN confiant      & 52–100 & 36.1–36.7 & 73–96 & non mesuré & sain   & 	0.001 & 0.001 & non-sepsis \checkmark \\
 \rowcolor{blockorange}
-\textbf{FP incertain} & 70--88 & 35.9--37.8 & 58--90 & non mesuré & sain & 0.0845 & \textbf{1.06} & SEPSIS $\times$ \\
-FN silencieux    & 58--84   & non mesuré & 56--77 & 1.4--3.1   & sepsis & 0.0006 & 0.00  & non-sepsis $\times$ \\
+\textbf{FP incertain} & 86–135 & 36.6–37.7 & 92→69 & non mesuré & sain & 0.052 & \textbf{0.46} & SEPSIS $\times$ \\
+FN silencieux    & 62–86   & 35.0–36.6 & 80–148 & 0.9–1.3   & sepsis & 0.001 & 0.002  & non-sepsis $\times$ \\
 \bottomrule
 \end{tabular}}
 \end{table}
