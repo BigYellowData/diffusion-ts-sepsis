@@ -139,7 +139,7 @@ uv run python main.py --stage diffusion    # ~25 min — Diffusion-TS, 100 epoch
 uv run python main.py --stage classifier   # ~15 min — Transformer + MC Dropout, early stopping
 uv run python main.py --stage evaluate     # ~1 min — 50 passes MC Dropout sur le test
 uv run python main.py --stage compare      # ~15 min — entraîne et compare 5 baselines
-uv run python main.py --stage plots        # ~10 sec — génère ROC, PR, calibration, abstention
+uv run python main.py --stage plots        # ~10 sec — génère ROC, PR, calibration, uncertainty_dist
 ```
 
 ### Étude d'ablation : variation du ratio de labels
@@ -199,7 +199,7 @@ diffusion-ts-sepsis/
 │   │   ├── preprocess.py            # Chargement parallèle PSV, fenêtrage 24h, masque NaN, splits
 │   │   └── dataset.py               # PyTorch Dataset + DataLoaders avec labelled_mask
 │   ├── models/
-│   │   ├── denoiser.py              # Transformer débruiteur (décomposition trend/seasonal)
+│   │   ├── denoiser.py              # Transformer débruiteur ε_θ (décomposition trend/seasonal, dropout p=0.1)
 │   │   ├── diffusion_ts.py          # DDPM complet : cosine schedule, DDIM, CFG, generate_class()
 │   │   └── classifier.py            # Transformer + [CLS] token + MC Dropout (50 passes)
 │   ├── training/
@@ -213,9 +213,9 @@ diffusion-ts-sepsis/
 │   │   ├── signature_baseline.py    # Path Signatures + XGBoost (Morrill et al. CinC 2019)
 │   │   └── compare.py               # Entraîne + compare les 5 baselines, génère le tableau
 │   └── utils/
-│       ├── metrics.py               # AUROC, AUPRC, F1, ECE, PhysioNet utility, abstention curve
+│       ├── metrics.py               # AUROC, AUPRC, F1, ECE, PhysioNet utility
 │       ├── uncertainty.py           # Évaluation MC Dropout, corrélation incertitude–erreur
-│       └── plots.py                 # Figures ROC, PR, calibration, abstention, uncertainty_dist
+│       └── plots.py                 # Figures ROC, PR, calibration, uncertainty_dist
 │
 ├── tests/                           # 76 tests pytest (~1 sec)
 │   ├── conftest.py
@@ -238,7 +238,7 @@ diffusion-ts-sepsis/
 │
 ├── figures/                         # Figures du rapport (PDF + PNG)
 │   ├── roc_curve.pdf, pr_curve.pdf
-│   ├── calibration.pdf, abstention.pdf, uncertainty_dist.pdf
+│   ├── calibration.pdf, uncertainty_dist.pdf
 │   ├── synthetic_vs_real.{pdf,png}            # 6 trajectoires réelles vs 6 synthétiques
 │   └── distribution_real_vs_synth.{pdf,png}   # Histogrammes marginaux
 │

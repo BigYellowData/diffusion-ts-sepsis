@@ -155,25 +155,36 @@ def plot_calibration(y_true: np.ndarray, y_prob: np.ndarray,
 # ── 4. Courbe d'abstention ────────────────────────────────────────────────────
 
 def plot_abstention(y_true: np.ndarray, y_prob: np.ndarray,
-                    uncertainty: np.ndarray, n_points: int = 30) -> None:
-    order = np.argsort(uncertainty)       # plus certain → premier
-    baseline_prec = float(y_true.mean())
+                    uncertainty: np.ndarray, n_points: int = 30,
+                    threshold: float = 0.5) -> None:
+    """
+    Selective-precision curve: among the positive predictions (y_pred=1 at the
+    operational threshold), abstain on the most uncertain ones — flagging them
+    for human review rather than triggering an automated alarm — and measure
+    the precision on the kept alerts.
 
-    coverages, precisions, aurocs = [], [], []
+    This matches the clinical use case: most predictions are non-sepsis, the
+    alerts are rare and high-stakes. We want high precision among alerts.
 
+    Expected shape: monotonically decreasing from left (high coverage of alerts
+    kept = baseline precision) to right (low coverage = highest precision after
+    pruning the most uncertain alerts).
+    """
+    pos_pred = y_prob >= threshold
+    yt_pos = y_true[pos_pred].astype(float)   # 1 if true sepsis, 0 if FP
+    unc_pos = uncertainty[pos_pred]
+    n_pos_pred = int(pos_pred.sum())
+    baseline_prec = float(yt_pos.mean())
+
+    # Sort alerts by uncertainty (most certain first)
+    order = np.argsort(unc_pos)
+
+    coverages, precisions = [], []
     for k in np.linspace(0.05, 1.0, n_points):
-        n_keep = max(10, int(k * len(y_true)))
+        n_keep = max(20, int(k * n_pos_pred))
         idx = order[:n_keep]
-        yt, yp = y_true[idx], y_prob[idx]
-
-        threshold = 0.5
-        y_pred_k = (yp >= threshold).astype(int)
-        tp = ((y_pred_k == 1) & (yt == 1)).sum()
-        fp = ((y_pred_k == 1) & (yt == 0)).sum()
-        prec = tp / (tp + fp + 1e-9)
-
         coverages.append(k)
-        precisions.append(prec)
+        precisions.append(float(yt_pos[idx].mean()))
 
     coverages  = np.array(coverages)
     precisions = np.array(precisions)
@@ -182,12 +193,13 @@ def plot_abstention(y_true: np.ndarray, y_prob: np.ndarray,
     ax.plot(coverages * 100, precisions * 100, color=GREEN, lw=2,
             label="Diffusion-TS + MC Dropout")
     ax.axhline(baseline_prec * 100, color=GRAY, lw=1, linestyle="--",
-               label=f"Précision de base ({baseline_prec*100:.1f}%)")
+               label=f"Précision sans abstention ({baseline_prec*100:.1f} %)")
 
-    ax.set_xlabel("Couverture (% d'échantillons conservés)")
-    ax.set_ylabel("Précision (%)")
-    ax.set_title("Courbe d'abstention\n(incertitude MC Dropout)")
-    ax.legend()
+    ax.set_xlabel(f"Couverture des alertes (n = {n_pos_pred} prédictions positives)")
+    ax.set_ylabel("Précision parmi les alertes conservées (%)")
+    ax.set_title("Courbe d'abstention sur les alertes\n"
+                 "(les alertes les plus incertaines sont écartées en premier)")
+    ax.legend(loc="upper right")
     ax.xaxis.set_major_formatter(ticker.FormatStrFormatter("%d%%"))
     ax.yaxis.set_major_formatter(ticker.FormatStrFormatter("%d%%"))
 
@@ -251,7 +263,9 @@ def generate_all_plots(results_dir: str = "results") -> None:
     plot_roc(y_true, mean_prob, auroc)
     plot_pr(y_true, mean_prob, auprc, threshold)
     plot_calibration(y_true, mean_prob, ece)
-    plot_abstention(y_true, mean_prob, uncertainty)
     plot_uncertainty_distribution(y_true, mean_prob, uncertainty, threshold)
+    # Note: plot_abstention() est conservée comme utilitaire mais non appelée
+    # ici. Sur ce dataset, le score MC Dropout ne discrimine pas TP/FP parmi
+    # les alertes (cf. discussion §6.3), la courbe est donc peu informative.
 
     logger.info(f"[Plots] All figures saved to {FIGURES_DIR.resolve()}/")

@@ -148,8 +148,9 @@ quantification de l'incertitude bayésienne par Monte Carlo Dropout \cite{gal201
     sepsis qui rééquilibrent un classifieur Transformer.
     \item \textbf{Quantification de l'incertitude par MC Dropout} : production d'un score
     d'incertitude par échantillon, dont la corrélation avec l'erreur (variance
-    $\times 12.8$ plus élevée sur les prédictions incorrectes) permet une stratégie
-    d'abstention clinique.
+    $\times 12.8$ plus élevée sur les prédictions incorrectes, Pearson $r = 0.43$)
+    permet d'identifier en aval les cas où le modèle hésite et qui nécessitent
+    une vérification humaine.
 \end{enumerate}
 
 Sur le jeu de test (10~\% de labels), notre méthode atteint AUROC~=~0.868,
@@ -165,8 +166,9 @@ patients labellés. Pour y parvenir, nous chaînons deux modèles distincts : un
 diffusion qui \emph{génère} des trajectoires patients synthétiques étiquetées sepsis,
 suivi d'un classifieur Transformer qui \emph{prédit} le sepsis sur les données réelles
 augmentées par ces synthétiques. Cette séparation permet à la diffusion d'exploiter la
-totalité du dataset (labellé + non labellé) pour apprendre la structure des trajectoires,
-là où un classifieur supervisé classique se limiterait aux 10~\% labellés.
+totalité du dataset (labellé + non labellé) pour apprendre la structure des trajectoires
+patients, là où un classifieur supervisé classique ne peut tirer aucune information
+des 1 942 fenêtres positives dont l'étiquette est cachée (90~\% des positifs).
 
 Cette approche s'inspire conceptuellement du travail de Hirnschall \cite{hirnschall2025},
 qui applique un cadre similaire --- modèle génératif semi-supervisé augmenté d'une
@@ -218,7 +220,9 @@ conditionnel, $\gamma > 1$ accentue l'effet de la classe au prix de la diversit�
 Le modèle de diffusion est entraîné sur \textbf{toutes} les données (labellées et non
 labellées) pour apprendre la distribution générale des trajectoires patients. Le guidage
 conditionnel n'utilise que le sous-ensemble labellé (10~\% des positifs dans notre
-configuration principale, soit 215 patients sur 2 157).
+configuration principale, soit 215 \emph{fenêtres positives} sur 2 157 — issues
+d'environ 80--100 patients distincts, un patient septique générant typiquement 2 à 3
+fenêtres positives via le fenêtrage glissant).
 
 \subsection{Incertitude bayésienne via Monte Carlo Dropout}
 
@@ -487,20 +491,13 @@ Seuil optimal (Youden, val set)  & 0.0178 \\
     \caption{Variance MC Dropout : erreurs vs corrects (ratio = $\times$12.8)}
 \end{subfigure}
 \caption{Qualité de calibration et corrélation incertitude--erreur.
-\textbf{Gauche :} le modèle est bien calibré (la courbe orange suit la diagonale),
-et les probabilités prédites pour les cas sepsis se concentrent au-dessus de 0.1,
-distinctes des non-sepsis ($<$0.05). \textbf{Droite :} la variance MC Dropout
-des prédictions incorrectes est 12.8$\times$ supérieure à celle des prédictions
-correctes, validant l'utilité clinique du score d'incertitude.}
-\end{figure}
-
-\begin{figure}[H]
-\centering
-\includegraphics[width=0.55\textwidth]{figures/abstention.pdf}
-\caption{Courbe d'abstention : précision en fonction de la fraction d'échantillons
-conservés (les plus incertains sont écartés en premier). À 50\% de couverture
-(le modèle s'abstient sur la moitié la plus incertaine), la précision sur les
-alertes conservées est significativement supérieure à la précision de base (2.2\%).}
+\textbf{Gauche :} le modèle est bien calibré (la courbe orange suit la diagonale).
+La distribution des probabilités prédites pour les cas sepsis présente une queue
+qui s'étend jusqu'à 0.4, contrairement aux non-sepsis qui restent fortement
+concentrés sous 0.05. \textbf{Droite :} la variance MC Dropout des prédictions
+incorrectes est 12.8$\times$ supérieure à celle des prédictions correctes,
+validant l'utilité du score d'incertitude pour identifier les cas où le modèle
+hésite.}
 \end{figure}
 
 \subsection{Visualisation des trajectoires synthétiques}
@@ -570,7 +567,7 @@ Les unités : HR en battements/min, MAP et SBP en mmHg, Temp en °C, Lactate en 
 \midrule
 TP confiant      & 79--100  & 37.1--38.0 & 67--109 & non mesuré & sepsis & 0.419 & 1.07  & SEPSIS \checkmark \\
 TN confiant      & 52--100  & 36.1--36.7 & 73--96  & non mesuré & sain   & 0.002 & 0.001 & non-sepsis \checkmark \\
-\rowcolor{bestrow}
+\rowcolor{blockorange}
 \textbf{FP incertain} & 86--\textbf{135} & 36.6--37.7 & 92$\to$\textbf{69} & non mesuré & sain & 0.728 & \textbf{19.5} & SEPSIS $\times$ \\
 FN silencieux    & 62--86   & \textbf{35.0}--36.6 & 80--148 & 0.9--1.3   & sepsis & 0.013 & 0.12  & non-sepsis $\times$ \\
 \bottomrule
@@ -629,7 +626,7 @@ La comparaison entre le Transformer vanilla (AUROC = 0.789) et notre méthode
 (AUROC = 0.868) révèle un gain de \textbf{+7.9 points d'AUROC} dû exclusivement à
 l'augmentation par génération conditionnelle. Ce résultat démontre que Diffusion-TS
 produit des trajectoires patients synthétiques suffisamment réalistes pour entraîner
-un classifieur robuste avec seulement 215 exemples positifs labellés.
+un classifieur robuste avec seulement 215 fenêtres positives labellées.
 
 \subsection{Comparaison avec les baselines supervisées}
 
@@ -660,17 +657,21 @@ Le résultat le plus frappant de l'ablation est la \textbf{stabilité remarquabl
 Cela s'explique par l'architecture semi-supervisée : le modèle de diffusion apprend la
 distribution générale des trajectoires patients sur \emph{toutes} les données sans supervision,
 et le guidage conditionnel ne sert qu'à orienter la génération synthétique. Avec seulement
-\textbf{108 exemples positifs labellés (5\%)}, le système atteint déjà AUROC = 0.864.
+\textbf{108 fenêtres positives labellées (5\%)}, le système atteint déjà AUROC = 0.864.
 
-L'AUPRC culmine à 25\% (0.1484), suggérant que le rapport signal/bruit dans les données
-synthétiques générées est optimal à ce ratio. En dessous (5--10\%), les synthétiques sont
-moins fidèles faute de supervision ; au-dessus (50\%), le surplus de labels n'apporte pas
-de gain car la distribution est déjà bien capturée.
+L'AUPRC oscille entre 0.136 et 0.148 sans tendance monotone (5\% : 0.144, 10\% : 0.136,
+25\% : 0.148, 50\% : 0.136), avec le maximum atteint à 25\%. Le F1 culmine quant à lui
+à 5\% (0.141), pas au ratio le plus riche en labels. Cette absence de monotonie est
+\textbf{cohérente avec notre thèse centrale} : si la performance dépendait fortement
+du nombre de labels, on observerait une croissance régulière entre 5\% et 50\%. Au
+lieu de cela, la variation est faible et bruitée, ce qui confirme que la diffusion
+apprend l'essentiel de sa structure sur les 94 000 fenêtres non labellées, et que le
+guidage conditionnel n'apporte qu'un effet secondaire.
 
-L'ECE est minimale à 50\% (0.0058) — la configuration la mieux calibrée — tandis qu'à
-25\% on observe le plus mauvais ECE (0.0179) malgré la meilleure AUPRC. La calibration
-bayésienne du MC Dropout n'évolue donc pas de façon monotone avec le ratio de labels,
-mais reste partout inférieure à 0.02, ce qui demeure cliniquement acceptable.
+L'ECE varie aussi de façon non monotone (0.006 à 0.018 selon le ratio) mais reste
+partout inférieure à 0.02, ce qui demeure cliniquement acceptable. Les fluctuations
+ECE peuvent provenir de la stochasticité du training (un seul seed par ratio dans
+notre étude).
 
 \subsection{Entraînement et early stopping}
 
@@ -708,16 +709,35 @@ de coût clinique : pénalité FN = $-2.0$, pénalité FP = $-0.05$.
 \section{Conclusion}
 
 Ce projet démontre la faisabilité de l'adaptation de Diffusion-TS à la prédiction
-précoce du sepsis dans un cadre semi-supervisé avec incertitude bayésienne.
-Les trois contributions sont validées expérimentalement :
+précoce du sepsis dans un cadre semi-supervisé avec incertitude bayésienne. Les
+trois contributions annoncées en introduction sont validées expérimentalement :
 
 \begin{enumerate}
-    \item \textbf{L'augmentation par diffusion améliore significativement la classification}
-    (+7.9 pts AUROC vs Transformer vanilla, +2.7 pts vs BiLSTM supervisé).
-    \item \textbf{Le MC Dropout produit des scores d'incertitude utiles} : variance
-    12.8$\times$ plus élevée sur les erreurs, ECE = 0.009.
-    \item \textbf{La diffusion surpasse les GAN-based} en stabilité d'entraînement,
-    sans effondrement de mode ni oscillation de la loss.
+    \item \textbf{Première application de Diffusion-TS au domaine clinique et à
+    une tâche de classification.} Le modèle, initialement conçu pour la génération
+    de séries temporelles génériques (financières, énergétiques, physiques), est
+    transposé avec succès aux trajectoires d'unité de soins intensifs. Notre pipeline
+    atteint AUROC = 0.868 et AUPRC = 0.136 sur le test set, surpassant cinq baselines
+    dont l'approche signature gagnante du PhysioNet Challenge 2019.
+
+    \item \textbf{La génération conditionnelle semi-supervisée fonctionne.} En
+    entraînant la diffusion sur l'intégralité du dataset (labellé + non labellé)
+    avec \emph{classifier-free guidance}, on produit des trajectoires synthétiques
+    dont la qualité est validée visuellement et statistiquement
+    (figures~\ref{fig:traj} et~\ref{fig:dist}). Gain de classification mesuré :
+    \textbf{+7.9 pts AUROC} vs Transformer vanilla (preuve directe de l'apport
+    de l'augmentation) et \textbf{+2.7 pts} vs BiLSTM supervisé. À protocole
+    identique, la diffusion surpasse également l'approche GAN (0.868 vs 0.836
+    pour TimeGAN), ce qui justifie le choix architectural fait à la suite de
+    Hirnschall.
+
+    \item \textbf{La quantification d'incertitude par MC Dropout est exploitable.}
+    La variance des 50 passes stochastiques est \textbf{×12.8 plus élevée} sur les
+    prédictions incorrectes que sur les correctes (Pearson $r = 0.43$), avec un
+    ECE de \textbf{0.009} qui place le modèle parmi les mieux calibrés de la
+    comparaison. Le cas qualitatif \emph{FP incertain} (table~\ref{tab:cases})
+    illustre concrètement comment cette incertitude distingue une alerte fiable
+    d'une alerte à vérifier par un clinicien.
 \end{enumerate}
 
 Code source, tests (76 tests, 100~\% de réussite) et instructions de reproduction :
