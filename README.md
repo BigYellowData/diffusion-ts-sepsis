@@ -6,7 +6,7 @@ Adaptation de [Diffusion-TS](https://github.com/Y-debug-sys/Diffusion-TS) (ICLR 
 
 L'objectif est de faire un **classifieur** de sepsis robuste malgré le faible nombre de patients labellés (~2.3 % du dataset). On chaîne **deux modèles distincts** :
 
-1. Un **modèle de diffusion** (Diffusion-TS) qui *génère* des trajectoires patients synthétiques étiquetées sepsis. Il est entraîné sur l'intégralité du dataset (labellé + non labellé) et exploite *Classifier-Free Guidance* pour conditionner sur la classe.
+1. Un **modèle de diffusion** (Diffusion-TS) qui *génère* des trajectoires patients synthétiques étiquetées sepsis. Il est entraîné sur l'intégralité du dataset (étiqueté + non étiqueté) et exploite *Classifier-Free Guidance* pour conditionner sur la classe.
 2. Un **classifieur Transformer** qui *prédit* le sepsis sur les données réelles, augmentées par les synthétiques précédentes. Il intègre MC Dropout pour produire un score d'incertitude par échantillon.
 
 ```
@@ -26,18 +26,18 @@ Prédiction + Score d'incertitude
 ### Trois contributions
 
 - **Génération conditionnelle par diffusion** — trajectoires synthétiques de sepsis (CFG, γ=1.5) qui rééquilibrent un dataset très déséquilibré
-- **Cadre semi-supervisé** — la diffusion apprend sur 100 % des patients ; seul le guidage utilise les 10 % labellés
+- **Cadre semi-supervisé** — la diffusion apprend sur 100 % des patients ; seul le guidage utilise les 10 % étiquetés
 - **Incertitude bayésienne via MC Dropout** — variance ×6.6 plus élevée sur les erreurs : le modèle sait quand il hésite
 
 ---
 
 ## À quoi ressemblent les trajectoires générées ?
 
-Pour valider que la diffusion produit du cliniquement plausible, on compare des cas **réels** vs **synthétiques** sur 5 signes vitaux.
+Pour valider que la diffusion produit des trajectoires de patient cliniquement plausible, on compare des cas **réels** vs **synthétiques** sur 5 signes vitaux.
 
 ![Trajectoires : 6 vrais cas de sepsis vs 6 générés par Diffusion-TS](figures/synthetic_vs_real.png)
 
-> Les amplitudes physiologiques (HR 50–130, Temp 35–41, MAP 50–130, Resp 10–35) sont reproduites. Les variations sont lentes et continues, sans plateaux artificiels. Les synthétiques sont parfois légèrement plus larges en amplitude — effet attendu du coefficient de guidance γ=1.5 qui accentue le caractère pathologique.
+> Les variations sont lentes et continues, sans plateaux artificiels. Les synthétiques sont parfois légèrement plus larges en amplitude, effet attendu du coefficient de guidance γ=1.5 qui accentue le caractère pathologique.
 
 Et la distribution marginale des 200 échantillons synthétiques recouvre largement celle des ~52 000 pas de temps réels :
 
