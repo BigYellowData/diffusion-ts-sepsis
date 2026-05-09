@@ -138,6 +138,20 @@ uv run python main.py --stage all --label_ratio 0.05   # 5% de labels
 uv run python main.py --stage all --label_ratio 0.25   # 25% de labels
 ```
 
+### Notebook de démonstration
+
+Pour parcourir le pipeline en mode interactif (sans ré-entraîner) :
+
+```bash
+uv run jupyter lab notebooks/demo.ipynb
+```
+
+Le notebook charge les checkpoints existants et illustre, cellule par cellule :
+chargement du dataset, génération de trajectoires synthétiques par diffusion,
+prédiction avec MC Dropout sur 4 cas représentatifs (TP, TN, FP incertain, FN),
+et lecture des métriques globales. Les sorties sont déjà peuplées dans le fichier
+livré ; on peut le lire sans l'exécuter.
+
 ---
 
 ## Architecture

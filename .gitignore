@@ -15,7 +15,9 @@ results/
 
 # Jupyter
 .ipynb_checkpoints/
+# Tous les notebooks ignorés sauf demo.ipynb (livré pour notation)
 *.ipynb
+!notebooks/demo.ipynb
 
 # IDE
 .vscode/
