@@ -2,10 +2,32 @@
 
 Adaptation de [Diffusion-TS](https://github.com/Y-debug-sys/Diffusion-TS) (ICLR 2024) pour la **prédiction précoce du sepsis** sur le dataset PhysioNet/CinC Challenge 2019.
 
-Trois contributions principales :
-- **Génération conditionnelle** par diffusion pour rééquilibrer le dataset (~2.3% positifs)
-- **Cadre semi-supervisé** : entraînement sur toutes les données, guidage conditionnel sur les labellés uniquement
-- **Incertitude bayésienne** via Monte Carlo Dropout — le modèle sait quand il hésite
+## Comment ça marche
+
+L'objectif est un **classifieur** de sepsis robuste malgré le faible nombre de patients labellés (~2.3 % du dataset). On chaîne **deux modèles distincts** :
+
+1. Un **modèle de diffusion** (Diffusion-TS) qui *génère* des trajectoires patients synthétiques étiquetées sepsis. Il est entraîné sur l'intégralité du dataset (labellé + non labellé) et exploite *Classifier-Free Guidance* pour conditionner sur la classe.
+2. Un **classifieur Transformer** qui *prédit* le sepsis sur les données réelles, augmentées par les synthétiques précédentes. Il intègre MC Dropout pour produire un score d'incertitude par échantillon.
+
+```
+Données brutes (40 336 patients)
+        ↓  prétraitement (fenêtres 24h)
+125 988 fenêtres  |  2.29 % positifs
+        ↓  Diffusion-TS (semi-supervisé, 100 epochs)
+   ↙                            ↘
+Génération conditionnelle      Représentation apprise
+(6 471 synth. sepsis)          des trajectoires patients
+   ↘                            ↙
+Classifieur Transformer + MC Dropout (N=50)
+        ↓
+Prédiction + Score d'incertitude
+```
+
+### Trois contributions
+
+- **Génération conditionnelle par diffusion** — trajectoires synthétiques de sepsis (CFG, γ=1.5) qui rééquilibrent un dataset très déséquilibré
+- **Cadre semi-supervisé** — la diffusion apprend sur 100 % des patients ; seul le guidage utilise les 10 % labellés
+- **Incertitude bayésienne via MC Dropout** — variance ×6.6 plus élevée sur les erreurs : le modèle sait quand il hésite
 
 ---
 
@@ -125,26 +147,6 @@ src/
 ```bash
 uv run pytest          # 76 tests, ~1 seconde
 uv run pytest -v       # mode verbose
-```
-
----
-
-## Pipeline technique
-
-```
-Données brutes (PhysioNet 2019, 40 336 patients)
-              ↓
-  Prétraitement (fenêtres 24h, masque d'observation, normalisation)
-              ↓  125 988 fenêtres  |  2.29% positifs
-  Diffusion-TS (semi-supervisé, 100 epochs)
-        ↙                        ↘
-Génération conditionnelle     Distribution générale
-(6 471 synth. sepsis)         des trajectoires
-        ↘                        ↙
-  Classifieur Transformer + MC Dropout
-  (early stop epoch 8, AUROC val = 0.852)
-              ↓
-  Prédiction + Score d'incertitude
 ```
 
 ---
