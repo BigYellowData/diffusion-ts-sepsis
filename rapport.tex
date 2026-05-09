@@ -136,9 +136,12 @@ quantification de l'incertitude bayésienne par Monte Carlo Dropout \cite{gal201
 
 \paragraph{Contributions principales.} Ce projet apporte trois contributions complémentaires :
 \begin{enumerate}[leftmargin=2em, itemsep=0.2em]
-    \item \textbf{Adaptation de Diffusion-TS au domaine clinique} : transposition d'un
-    modèle DDPM conçu pour des séries temporelles génériques aux trajectoires multivariées
-    d'unités de soins intensifs (40 variables, 24~h glissantes, fortes valeurs manquantes).
+    \item \textbf{Première application de Diffusion-TS à des données cliniques et à une
+    tâche de classification} : ce modèle, conçu initialement pour la génération de séries
+    temporelles génériques (financières, énergétiques, physiques), n'a jamais été appliqué
+    à un problème clinique ni à de la classification. Nous le transposons aux trajectoires
+    multivariées d'unités de soins intensifs (40 variables, 24~h glissantes, fortes valeurs
+    manquantes).
     \item \textbf{Génération conditionnelle semi-supervisée} : entraînement du modèle de
     diffusion sur \emph{l'ensemble} du dataset (labellé + non labellé) avec
     \emph{classifier-free guidance}, pour produire des trajectoires synthétiques de
@@ -164,6 +167,15 @@ suivi d'un classifieur Transformer qui \emph{prédit} le sepsis sur les données
 augmentées par ces synthétiques. Cette séparation permet à la diffusion d'exploiter la
 totalité du dataset (labellé + non labellé) pour apprendre la structure des trajectoires,
 là où un classifieur supervisé classique se limiterait aux 10~\% labellés.
+
+Cette approche s'inspire conceptuellement du travail de Hirnschall \cite{hirnschall2025},
+qui applique un cadre similaire --- modèle génératif semi-supervisé augmenté d'une
+quantification d'incertitude bayésienne --- au problème déséquilibré de la détection
+de fraude bancaire, avec des GANs sur log-signatures. Notre contribution principale est
+de \textbf{transposer cette méthodologie} aux trajectoires cliniques en remplaçant
+le générateur GAN par un modèle de diffusion (Diffusion-TS \cite{diffusion-ts}), plus
+stable à l'entraînement et capable d'apprendre la distribution générale des données
+non labellées sans effondrement de mode.
 
 Notre approche repose sur trois composantes distinctes et complémentaires.
 
