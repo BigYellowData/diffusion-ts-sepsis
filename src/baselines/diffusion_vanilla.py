@@ -1,10 +1,10 @@
 """
-Baseline 3 — Diffusion-TS vanilla + classifier (no semi-supervised, no augmentation).
+Modèle de base 3 — Diffusion-TS classique + classificateur (pas de semi-supervisé, pas d'augmentation).
 
-Uses the same Transformer classifier architecture but:
-  - Trained on labelled data only (no synthetic augmentation)
-  - No MC Dropout at inference (single deterministic pass)
-  - Threshold calibrated on val set
+Utilise la même architecture de classificateur Transformer mais :
+  - Entraîné uniquement sur les données étiquetées (aucune augmentation synthétique)
+  - Pas de MC Dropout lors de l'inférence (passage déterministe unique)
+  - Seuil calibré sur l'ensemble de validation
 """
 
 from __future__ import annotations
@@ -27,7 +27,7 @@ logger = logging.getLogger(__name__)
 
 def train_vanilla_classifier(splits: dict, cfg: dict, device: torch.device) -> dict:
     """
-    Train the Transformer classifier on labelled data only, no augmentation.
+    Entraîne le classificateur Transformer uniquement sur les données étiquetées, sans augmentation.
     """
     train = splits["train"]
     labelled = train["labelled_mask"]
@@ -105,6 +105,7 @@ def train_vanilla_classifier(splits: dict, cfg: dict, device: torch.device) -> d
 
 @torch.no_grad()
 def _predict(model: SepsisClassifier, split: dict, device: torch.device) -> np.ndarray:
+    """Effectue une prédiction sur l'ensemble de données et retourne les probabilités."""
     model.eval()
     X = torch.from_numpy(split["X"])
     M = torch.from_numpy(split["M"])
@@ -119,4 +120,5 @@ def _predict(model: SepsisClassifier, split: dict, device: torch.device) -> np.n
 
 @torch.no_grad()
 def _eval(model: SepsisClassifier, split: dict, device: torch.device) -> dict:
+    """Évalue le modèle sur l'ensemble de données."""
     return compute_metrics(split["y"], _predict(model, split, device))

@@ -1,10 +1,10 @@
 """
-Uncertainty quantification utilities.
+Utilitaires de quantification de l'incertitude.
 
-Provides:
-  - Full test-set MC Dropout evaluation with uncertainty scores
-  - Uncertainty calibration analysis
-  - Plotting helpers (saved to disk)
+Fournit :
+  - Évaluation complète par MC Dropout sur l'ensemble de test avec scores d'incertitude
+  - Analyse de la calibration de l'incertitude
+  - Aides au tracé (sauvegardés sur disque)
 """
 
 from __future__ import annotations
@@ -53,20 +53,20 @@ def evaluate_with_uncertainty(
     val_loader: DataLoader | None = None,
 ) -> dict:
     """
-    Run MC Dropout inference on a full DataLoader.
+    Exécute l'inférence MC Dropout sur un DataLoader complet.
 
-    If val_loader is provided, the decision threshold is calibrated on the
-    validation set (Youden's J) before being applied to the test set.
+    Si val_loader est fourni, le seuil de décision est calibré sur l'ensemble
+    de validation (indice J de Youden) avant d'être appliqué à l'ensemble de test.
 
-    Returns:
+    Retourne :
         {
           "y_true"       : (N,)
           "mean_prob"    : (N,)
-          "uncertainty"  : (N,)  predictive variance
-          "metrics"      : dict from full_evaluation()
+          "uncertainty"  : (N,)  variance prédictive
+          "metrics"      : dictionnaire retourné par full_evaluation()
         }
     """
-    # Calibrate threshold on validation set
+    # Calibre le seuil sur l'ensemble de validation
     threshold = None
     if val_loader is not None:
         val_y, val_prob, _ = _collect_mc_probs(classifier, val_loader, device, n_mc_samples)
@@ -97,16 +97,16 @@ def uncertainty_correlation(
     threshold: float = 0.5,
 ) -> dict:
     """
-    Analyse whether high uncertainty correlates with model errors.
+    Analyse si une forte incertitude est corrélée aux erreurs du modèle.
 
-    The decision threshold should match the operational threshold used
-    elsewhere in the pipeline (Youden-calibrated on val); using a fixed
-    0.5 on a 2.3% positive dataset makes "incorrect" almost equal to
-    "missed positive", which inflates u_correct and deflates the ratio.
+    Le seuil de décision doit correspondre au seuil opérationnel utilisé
+    ailleurs dans le pipeline (calibré par Youden sur la validation) ; l'utilisation
+    d'un seuil fixe de 0.5 sur un jeu de données à 2.3% de positifs rend "incorrect"
+    presque équivalent à "positif manqué", ce qui gonfle u_correct et dégonfle le ratio.
 
-    Returns a dict with:
-      - Pearson correlation (uncertainty, error)
-      - Mean uncertainty for correct vs. incorrect predictions (at threshold)
+    Retourne un dictionnaire avec :
+      - Corrélation de Pearson (incertitude, erreur)
+      - Incertitude moyenne pour les prédictions correctes vs incorrectes (au seuil)
     """
     y_pred = (y_prob >= threshold).astype(int)
     errors = (y_pred != y_true).astype(float)
@@ -127,7 +127,7 @@ def uncertainty_correlation(
 
 
 def save_results(results: dict, out_dir: str = "results") -> None:
-    """Save numpy arrays and metric summary to disk."""
+    """Sauvegarde les tableaux numpy et le résumé des métriques sur disque."""
     out_path = Path(out_dir)
     out_path.mkdir(parents=True, exist_ok=True)
 

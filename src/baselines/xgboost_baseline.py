@@ -1,9 +1,9 @@
 """
-Baseline 1 — XGBoost on labelled data only.
+Modèle de base 1 — XGBoost sur les données étiquetées uniquement.
 
-Features: flatten (T, F) window → (T*F,) + hand-crafted aggregates
-  (mean, std, min, max, last value, missing rate per feature).
-Trained only on the labelled subset of the training set.
+Caractéristiques : aplatissement de la fenêtre (T, F) → (T*F,) + agrégats créés manuellement
+  (moyenne, écart-type, min, max, dernière valeur, taux de valeurs manquantes par caractéristique).
+Entraîné uniquement sur le sous-ensemble étiqueté de l'ensemble d'entraînement.
 """
 
 from __future__ import annotations
@@ -20,24 +20,24 @@ logger = logging.getLogger(__name__)
 
 def _extract_features(X: np.ndarray, M: np.ndarray) -> np.ndarray:
     """
-    X : (N, T, F)  normalised windows
-    M : (N, T, F)  observation masks
-    Returns (N, 5*F) feature vector.
+    X : (N, T, F)  fenêtres normalisées
+    M : (N, T, F)  masques d'observation
+    Retourne un vecteur de caractéristiques de dimension (N, 6*F).
     """
     mean  = X.mean(axis=1)                          # (N, F)
     std   = X.std(axis=1)                           # (N, F)
     xmin  = X.min(axis=1)                           # (N, F)
     xmax  = X.max(axis=1)                           # (N, F)
-    last  = X[:, -1, :]                             # (N, F)  last time step
-    miss  = 1.0 - M.mean(axis=1)                   # (N, F)  missing rate
+    last  = X[:, -1, :]                             # (N, F)  dernière étape temporelle
+    miss  = 1.0 - M.mean(axis=1)                   # (N, F)  taux de valeurs manquantes
     return np.concatenate([mean, std, xmin, xmax, last, miss], axis=1)
 
 
 def train_xgboost(splits: dict, cfg: dict) -> dict:
     """
-    Train XGBoost using only the labelled positive subset + all negatives.
+    Entraîne XGBoost en utilisant uniquement le sous-ensemble positif étiqueté + tous les négatifs.
 
-    Returns a result dict with val and test metrics.
+    Retourne un dictionnaire de résultats contenant les métriques de validation et de test.
     """
     train = splits["train"]
     labelled = train["labelled_mask"]               # bool (N,)
@@ -45,7 +45,7 @@ def train_xgboost(splits: dict, cfg: dict) -> dict:
     X_train_full = _extract_features(train["X"], train["M"])
     y_train_full = train["y"]
 
-    # Keep only labelled positives + all negatives (semi-supervised setting)
+    # Ne garde que les positifs étiquetés + tous les négatifs (configuration semi-supervisée)
     keep = labelled | (y_train_full == 0)
     X_tr = X_train_full[keep]
     y_tr = y_train_full[keep]

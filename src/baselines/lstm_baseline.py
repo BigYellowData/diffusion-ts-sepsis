@@ -1,8 +1,8 @@
 """
-Baseline 2 — Bidirectional LSTM on labelled data only.
+Modèle de base 2 — LSTM bidirectionnel sur les données étiquetées uniquement.
 
-Trained exclusively on labelled samples (no unlabelled, no augmentation).
-No MC Dropout — single deterministic forward pass.
+Entraîné exclusivement sur des échantillons étiquetés (pas de données non étiquetées, pas d'augmentation).
+Pas de MC Dropout — passage déterministe unique.
 """
 
 from __future__ import annotations
@@ -23,9 +23,10 @@ from ..utils.metrics import compute_metrics, optimal_threshold
 logger = logging.getLogger(__name__)
 
 
-# ─── Model ────────────────────────────────────────────────────────────────────
+# ─── Modèle ────────────────────────────────────────────────────────────────────
 
 class LSTMClassifier(nn.Module):
+    """Classificateur basé sur un réseau LSTM bidirectionnel."""
     def __init__(self, n_features: int, hidden_size: int = 128, n_layers: int = 2, dropout: float = 0.3):
         super().__init__()
         self.lstm = nn.LSTM(
@@ -45,12 +46,12 @@ class LSTMClassifier(nn.Module):
         return self.head(self.drop(last)).squeeze(-1)
 
 
-# ─── Training ─────────────────────────────────────────────────────────────────
+# ─── Entraînement ─────────────────────────────────────────────────────────────────
 
 def train_lstm(splits: dict, cfg: dict, device: torch.device) -> dict:
     """
-    Train BiLSTM using only labelled samples.
-    Returns val and test metrics.
+    Entraîne le BiLSTM en utilisant uniquement les échantillons étiquetés.
+    Retourne les métriques de validation et de test.
     """
     train = splits["train"]
     labelled = train["labelled_mask"]
@@ -60,7 +61,7 @@ def train_lstm(splits: dict, cfg: dict, device: torch.device) -> dict:
     M_tr = torch.from_numpy(train["M"][keep])
     y_tr = torch.from_numpy(train["y"][keep])
 
-    # Concatenate mask as extra features (same as classifier)
+    # Concatène le masque en tant que caractéristiques supplémentaires (idem classificateur)
     X_tr = torch.cat([X_tr, M_tr], dim=-1)
 
     n_pos = int(y_tr.sum())
@@ -105,7 +106,7 @@ def train_lstm(splits: dict, cfg: dict, device: torch.device) -> dict:
 
     model.load_state_dict(best_state)
 
-    # Calibrate threshold on val, apply to test
+    # Calibre le seuil sur l'ensemble de validation, l'applique au test
     val_prob = _predict_proba(model, splits["val"], device)
     threshold = optimal_threshold(splits["val"]["y"], val_prob)
 
@@ -122,6 +123,7 @@ def train_lstm(splits: dict, cfg: dict, device: torch.device) -> dict:
 
 @torch.no_grad()
 def _predict_proba(model: LSTMClassifier, split: dict, device: torch.device) -> np.ndarray:
+    """Effectue une prédiction sur l'ensemble de données et retourne les probabilités."""
     model.eval()
     X = torch.cat([
         torch.from_numpy(split["X"]),
@@ -138,5 +140,6 @@ def _predict_proba(model: LSTMClassifier, split: dict, device: torch.device) -> 
 
 @torch.no_grad()
 def _eval_lstm(model: LSTMClassifier, split: dict, device: torch.device) -> dict:
+    """Évalue le modèle sur l'ensemble de données et retourne les métriques."""
     prob = _predict_proba(model, split, device)
     return compute_metrics(split["y"], prob)

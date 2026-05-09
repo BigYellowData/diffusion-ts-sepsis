@@ -1,17 +1,17 @@
 """
-PhysioNet/CinC Challenge 2019 – preprocessing pipeline.
+Pipeline de prétraitement du Challenge PhysioNet/CinC 2019.
 
-Expected raw data layout:
+Structure attendue des données brutes :
   data/raw/
-    training_setA/   (or training/)
+    training_setA/   (ou training/)
       p000001.psv
       p000002.psv
       ...
-    training_setB/   (optional second hospital set)
+    training_setB/   (deuxième ensemble hospitalier optionnel)
       ...
 
-Each .psv file has a header row then one row per hour.
-Columns: HR, O2Sat, Temp, SBP, MAP, DBP, Resp, EtCO2, ..., SepsisLabel
+Chaque fichier .psv possède une ligne d'en-tête puis une ligne par heure.
+Colonnes : HR, O2Sat, Temp, SBP, MAP, DBP, Resp, EtCO2, ..., SepsisLabel
 """
 
 from __future__ import annotations
@@ -30,7 +30,7 @@ from tqdm import tqdm
 
 logger = logging.getLogger(__name__)
 
-# ─── Constants ────────────────────────────────────────────────────────────────
+# ─── Constantes ────────────────────────────────────────────────────────────────
 
 VITAL_COLS = ["HR", "O2Sat", "Temp", "SBP", "MAP", "DBP", "Resp", "EtCO2"]
 LAB_COLS = [
@@ -46,7 +46,7 @@ LABEL_COL = "SepsisLabel"
 N_FEATURES = len(FEATURE_COLS)  # 40
 
 
-# ─── Loading ──────────────────────────────────────────────────────────────────
+# ─── Chargement ──────────────────────────────────────────────────────────────────
 
 def _read_psv(path: str) -> pd.DataFrame:
     df = pd.read_csv(path, sep="|", na_values=["NaN"], dtype=np.float32)
@@ -58,12 +58,12 @@ def _read_psv(path: str) -> pd.DataFrame:
 
 def load_raw_patients(raw_dir: str, n_workers: int = 8) -> List[pd.DataFrame]:
     """
-    Read all .psv files in parallel and return a list of per-patient DataFrames.
+    Lit tous les fichiers .psv en parallèle et retourne une liste de DataFrames par patient.
 
-    Handles both sub-structures found in PhysioNet 2019:
+    Gère les deux sous-structures trouvées dans PhysioNet 2019 :
       - training_setA/training/*.psv
       - training_setB/training_setB/*.psv
-    Missing values are encoded as 'NaN' strings in the raw files.
+    Les valeurs manquantes sont encodées par la chaîne 'NaN' dans les fichiers bruts.
     """
     pattern = os.path.join(raw_dir, "**", "*.psv")
     files = sorted(glob.glob(pattern, recursive=True))
@@ -83,13 +83,13 @@ def load_raw_patients(raw_dir: str, n_workers: int = 8) -> List[pd.DataFrame]:
     return patients
 
 
-# ─── Missing value handling ───────────────────────────────────────────────────
+# ─── Gestion des valeurs manquantes ───────────────────────────────────────────────────
 
 def handle_missing(df: pd.DataFrame) -> Tuple[pd.DataFrame, pd.DataFrame]:
     """
-    Returns:
-        df_filled  – forward-filled then backward-filled then zero-filled.
-        df_mask    – binary mask, 1 = originally observed, 0 = imputed.
+    Retourne :
+        df_filled  – rempli vers l'avant (ffill) puis vers l'arrière (bfill) puis rempli de zéros.
+        df_mask    – masque binaire, 1 = initialement observé, 0 = imputé.
     """
     df_mask = (~df[FEATURE_COLS].isna()).astype(np.float32)
     df_filled = df.copy()
@@ -102,12 +102,12 @@ def handle_missing(df: pd.DataFrame) -> Tuple[pd.DataFrame, pd.DataFrame]:
     return df_filled, df_mask
 
 
-# ─── Windowing ───────────────────────────────────────────────────────────────
+# ─── Fenêtrage ───────────────────────────────────────────────────────────────
 
 def _window_patient(
     args: tuple,
 ) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
-    """Process a single patient: impute + window. Used for parallel execution."""
+    """Traite un seul patient : imputation + fenêtrage. Utilisé pour l'exécution parallèle."""
     pid, df, window_size, step_size = args
     df_filled, df_mask = handle_missing(df)
     feats = df_filled[FEATURE_COLS].values.astype(np.float32)
@@ -119,7 +119,7 @@ def _window_patient(
     if len(starts) == 0:
         return None
 
-    # Vectorised sliding window via stride tricks
+    # Fenêtre glissante vectorisée via stride tricks
     idx = starts[:, None] + np.arange(window_size)          # (n_windows, W)
     X_pat = feats[idx]                                       # (n_windows, W, F)
     M_pat = masks[idx]                                       # (n_windows, W, F)
@@ -136,13 +136,13 @@ def create_windows(
     n_workers: int = 8,
 ) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
     """
-    Slide a window over each patient's time series (parallelised).
+    Fait glisser une fenêtre sur la série temporelle de chaque patient (parallélisé).
 
-    Returns:
-        X      – (N, window_size, N_FEATURES)  feature windows
-        M      – (N, window_size, N_FEATURES)  observation masks
-        y      – (N,)                           labels (1 if sepsis onset within window)
-        pids   – (N,)                           patient index
+    Retourne :
+        X      – (N, window_size, N_FEATURES)  fenêtres de caractéristiques
+        M      – (N, window_size, N_FEATURES)  masques d'observation
+        y      – (N,)                           étiquettes (1 si déclenchement du sepsis dans la fenêtre)
+        pids   – (N,)                           index du patient
     """
     args = [(pid, df, window_size, step_size) for pid, df in enumerate(patients)]
 
@@ -180,7 +180,7 @@ def create_windows(
 # ─── Normalisation ────────────────────────────────────────────────────────────
 
 def fit_scaler(X_train: np.ndarray) -> StandardScaler:
-    """Fit a StandardScaler on the training split (reshape to 2-D first)."""
+    """Ajuste un StandardScaler sur l'ensemble d'entraînement (redimensionné en 2D d'abord)."""
     N, T, F = X_train.shape
     scaler = StandardScaler()
     scaler.fit(X_train.reshape(-1, F))
@@ -192,7 +192,7 @@ def apply_scaler(X: np.ndarray, scaler: StandardScaler) -> np.ndarray:
     return scaler.transform(X.reshape(-1, F)).reshape(N, T, F)
 
 
-# ─── Train / Val / Test split ─────────────────────────────────────────────────
+# ─── Séparation Train / Val / Test ─────────────────────────────────────────────────
 
 def split_by_patient(
     X: np.ndarray,
@@ -204,8 +204,8 @@ def split_by_patient(
     seed: int = 42,
 ) -> dict:
     """
-    Split at the *patient* level to avoid data leakage,
-    then return a dict with 'train', 'val', 'test' keys.
+    Sépare au niveau du *patient* pour éviter les fuites de données,
+    puis retourne un dictionnaire avec les clés 'train', 'val', 'test'.
     """
     rng = np.random.default_rng(seed)
     unique_pids = np.unique(pids)
@@ -233,7 +233,7 @@ def split_by_patient(
     return splits
 
 
-# ─── Label ratio sub-sampling (semi-supervised) ───────────────────────────────
+# ─── Sous-échantillonnage du ratio d'étiquettes (semi-supervisé) ───────────────────────────────
 
 def subsample_labels(
     y: np.ndarray,
@@ -241,9 +241,9 @@ def subsample_labels(
     seed: int = 42,
 ) -> np.ndarray:
     """
-    Return a boolean array marking which samples are 'labelled'.
-    label_ratio applies to *positive* samples; all negatives are treated as
-    unlabelled (their true label is hidden during semi-supervised training).
+    Retourne un tableau booléen indiquant quels échantillons sont 'étiquetés'.
+    label_ratio s'applique aux échantillons *positifs* ; tous les négatifs sont traités comme
+    non étiquetés (leur vraie étiquette est cachée pendant l'entraînement semi-supervisé).
     """
     rng = np.random.default_rng(seed)
     is_positive = y == 1
@@ -260,12 +260,12 @@ def subsample_labels(
     return labelled_mask
 
 
-# ─── Full pipeline entry point ────────────────────────────────────────────────
+# ─── Point d'entrée de la pipeline complète ────────────────────────────────────────────────
 
 def run_preprocessing(cfg: dict) -> dict:
     """
-    End-to-end preprocessing. Returns a dict with split data + scaler.
-    Saves processed arrays to disk for fast reloading.
+    Prétraitement de bout en bout. Retourne un dictionnaire avec les données séparées + le scaler.
+    Sauvegarde les tableaux traités sur le disque pour un rechargement rapide.
     """
     processed_dir = Path(cfg["data"]["processed_dir"])
     processed_dir.mkdir(parents=True, exist_ok=True)

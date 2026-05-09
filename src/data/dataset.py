@@ -1,5 +1,5 @@
 """
-PyTorch Dataset wrappers for the preprocessed PhysioNet 2019 windows.
+Wrappers PyTorch Dataset pour les fenêtres prétraitées de PhysioNet 2019.
 """
 
 from __future__ import annotations
@@ -13,14 +13,14 @@ from torch.utils.data import Dataset, DataLoader, WeightedRandomSampler
 
 class SepsisDataset(Dataset):
     """
-    Dataset for a single split (train / val / test).
+    Jeu de données pour un seul ensemble (train / val / test).
 
-    Args:
-        X              – (N, T, F) normalised feature windows
-        M              – (N, T, F) observation masks
-        y              – (N,)      binary sepsis labels
-        labelled_mask  – (N,)      bool: which samples have visible labels
-                         (None → all labelled, used for val/test)
+    Args :
+        X              – (N, T, F) fenêtres de caractéristiques normalisées
+        M              – (N, T, F) masques d'observation
+        y              – (N,)      étiquettes binaires de sepsis
+        labelled_mask  – (N,)      bool : quels échantillons ont des étiquettes visibles
+                         (None → tous étiquetés, utilisé pour val/test)
     """
 
     def __init__(
@@ -36,7 +36,7 @@ class SepsisDataset(Dataset):
         if labelled_mask is not None:
             self.labelled = torch.from_numpy(labelled_mask.astype(np.float32))
         else:
-            self.labelled = torch.ones(len(y))                # all labelled
+            self.labelled = torch.ones(len(y))                # tous étiquetés
 
     def __len__(self) -> int:
         return len(self.X)
@@ -45,15 +45,15 @@ class SepsisDataset(Dataset):
         return {
             "x": self.X[idx],           # (T, F)
             "mask": self.M[idx],        # (T, F)
-            "y": self.y[idx],           # scalar
+            "y": self.y[idx],           # scalaire
             "labelled": self.labelled[idx],  # 1.0 or 0.0
         }
 
 
-# ─── DataLoader helpers ───────────────────────────────────────────────────────
+# ─── Fonctions d'aide pour DataLoader ───────────────────────────────────────────────────────
 
 def make_weighted_sampler(y: np.ndarray) -> WeightedRandomSampler:
-    """Over-sample the minority (sepsis) class during training."""
+    """Sur-échantillonne la classe minoritaire (sepsis) pendant l'entraînement."""
     class_counts = np.bincount(y.astype(int))
     weights = 1.0 / class_counts[y.astype(int)]
     return WeightedRandomSampler(
@@ -65,8 +65,8 @@ def make_weighted_sampler(y: np.ndarray) -> WeightedRandomSampler:
 
 def build_dataloaders(splits: dict, cfg: dict) -> dict:
     """
-    Build DataLoaders for train / val / test.
-    Training uses a WeightedRandomSampler to handle class imbalance.
+    Construit les DataLoaders pour l'entraînement / validation / test.
+    L'entraînement utilise un WeightedRandomSampler pour gérer le déséquilibre des classes.
     """
     train_split = splits["train"]
     train_ds = SepsisDataset(
@@ -110,8 +110,8 @@ def build_dataloaders(splits: dict, cfg: dict) -> dict:
 
 def build_diffusion_loader(splits: dict, cfg: dict) -> DataLoader:
     """
-    DataLoader for unsupervised diffusion pre-training.
-    Uses ALL windows (labelled + unlabelled) without label info.
+    DataLoader pour le pré-entraînement non supervisé par diffusion.
+    Utilise TOUTES les fenêtres (étiquetées + non étiquetées) sans information d'étiquette.
     """
     train_split = splits["train"]
     ds = SepsisDataset(

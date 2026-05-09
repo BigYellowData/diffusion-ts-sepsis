@@ -45,6 +45,7 @@ FIGURES_DIR = Path("figures")
 
 
 def _save(fig: plt.Figure, name: str) -> None:
+    """Sauvegarde la figure dans le dossier des figures."""
     FIGURES_DIR.mkdir(exist_ok=True)
     path = FIGURES_DIR / name
     fig.savefig(path, bbox_inches="tight")
@@ -55,6 +56,7 @@ def _save(fig: plt.Figure, name: str) -> None:
 # ── 1. Courbe ROC ─────────────────────────────────────────────────────────────
 
 def plot_roc(y_true: np.ndarray, y_prob: np.ndarray, auroc: float) -> None:
+    """Génère et sauvegarde la courbe ROC."""
     fpr, tpr, _ = roc_curve(y_true, y_prob)
 
     fig, ax = plt.subplots(figsize=(4.5, 4.5))
@@ -76,6 +78,7 @@ def plot_roc(y_true: np.ndarray, y_prob: np.ndarray, auroc: float) -> None:
 
 def plot_pr(y_true: np.ndarray, y_prob: np.ndarray, auprc: float,
             threshold: float) -> None:
+    """Génère et sauvegarde la courbe Précision-Rappel."""
     prec, rec, thresholds = precision_recall_curve(y_true, y_prob)
     baseline = y_true.mean()
 
@@ -105,6 +108,7 @@ def plot_pr(y_true: np.ndarray, y_prob: np.ndarray, auprc: float,
 
 def plot_calibration(y_true: np.ndarray, y_prob: np.ndarray,
                      ece: float, n_bins: int = 10) -> None:
+    """Génère et sauvegarde le diagramme de calibration (fiabilité) et l'histogramme des probabilités."""
     bin_edges = np.linspace(0.0, 1.0, n_bins + 1)
     bin_centers, accs, confs, counts = [], [], [], []
 
@@ -158,25 +162,25 @@ def plot_abstention(y_true: np.ndarray, y_prob: np.ndarray,
                     uncertainty: np.ndarray, n_points: int = 30,
                     threshold: float = 0.5) -> None:
     """
-    Selective-precision curve: among the positive predictions (y_pred=1 at the
-    operational threshold), abstain on the most uncertain ones — flagging them
-    for human review rather than triggering an automated alarm — and measure
-    the precision on the kept alerts.
+    Courbe de précision sélective : parmi les prédictions positives (y_pred=1 au
+    seuil opérationnel), s'abstenir sur les plus incertaines — en les signalant
+    pour examen humain plutôt que de déclencher une alarme automatique — et mesurer
+    la précision sur les alertes conservées.
 
-    This matches the clinical use case: most predictions are non-sepsis, the
-    alerts are rare and high-stakes. We want high precision among alerts.
+    Cela correspond au cas d'utilisation clinique : la plupart des prédictions sont non-sepsis, les
+    alertes sont rares et à forts enjeux. Nous voulons une grande précision parmi les alertes.
 
-    Expected shape: monotonically decreasing from left (high coverage of alerts
-    kept = baseline precision) to right (low coverage = highest precision after
-    pruning the most uncertain alerts).
+    Forme attendue : décroissante de façon monotone de gauche (couverture élevée des alertes
+    conservées = précision de base) à droite (couverture faible = précision la plus élevée après
+    avoir écarté les alertes les plus incertaines).
     """
     pos_pred = y_prob >= threshold
-    yt_pos = y_true[pos_pred].astype(float)   # 1 if true sepsis, 0 if FP
+    yt_pos = y_true[pos_pred].astype(float)   # 1 si vrai sepsis, 0 si FP
     unc_pos = uncertainty[pos_pred]
     n_pos_pred = int(pos_pred.sum())
     baseline_prec = float(yt_pos.mean())
 
-    # Sort alerts by uncertainty (most certain first)
+    # Trie les alertes par incertitude (les plus certaines d'abord)
     order = np.argsort(unc_pos)
 
     coverages, precisions = [], []
@@ -211,6 +215,7 @@ def plot_abstention(y_true: np.ndarray, y_prob: np.ndarray,
 def plot_uncertainty_distribution(y_true: np.ndarray, y_prob: np.ndarray,
                                    uncertainty: np.ndarray,
                                    threshold: float) -> None:
+    """Génère et sauvegarde l'histogramme de distribution de l'incertitude."""
     y_pred = (y_prob >= threshold).astype(int)
     correct = y_pred == y_true
     incorrect = ~correct

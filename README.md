@@ -52,7 +52,7 @@ Et la distribution marginale des 200 échantillons synthétiques recouvre largem
 | XGBoost (labellé seulement) | Supervisé | 0.7835 | 0.0997 | 0.1156 | −0.468 | 0.020 |
 | BiLSTM (labellé seulement) | Supervisé | 0.8410 | 0.1086 | 0.1252 | −0.165 | 0.029 |
 | Transformer (sans augmentation) | Diffusion (sans semi-sup.) | 0.7892 | 0.0801 | 0.1092 | −0.472 | 0.016 |
-| TimeGAN (semi-sup.) | GAN-based | 0.8363 | 0.0993 | 0.1269 | −0.229 | 0.014 |
+| TimeGAN (semi-sup.) | GAN-based | 0.8363 | 0.0993 | **0.1269** | −0.229 | 0.014 |
 | Path Signatures + XGBoost† | Challenge winner | 0.7962 | 0.1009 | 0.1085 | — | — |
 | **Diffusion-TS + Aug + MC Dropout ★** | **Ours (semi-sup.)** | **0.8679** | **0.1363** | 0.1139 | **−0.080** | **0.009** |
 
@@ -79,7 +79,7 @@ Pour chaque cas : plage des signes vitaux observés sur la fenêtre 24h, puis so
 
 | Ratio | Labels (+) | AUROC | AUPRC | F1 | ECE |
 |---|---|---|---|---|---|
-| 5% | 108 | 0.8642 | 0.1443 | 0.1410 | 0.0170 |
+| 5% | 108 | 0.8642 | 0.1443 | **0.1410** | 0.0170 |
 | 10% | 215 | 0.8679 | 0.1363 | 0.1139 | 0.0088 |
 | 25% | 539 | 0.8669 | **0.1484** | 0.1153 | 0.0179 |
 | **50%** | **1078** | **0.8684** | 0.1356 | 0.1228 | **0.0058** |

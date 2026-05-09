@@ -44,7 +44,7 @@ def _compute_signatures(X: np.ndarray, depth: int = 3) -> np.ndarray:
     Calcule les signatures tronquées à l'ordre `depth` pour chaque fenêtre.
 
     X : (N, T, F)
-    Returns : (N, sig_dim)  où sig_dim = sum_{k=1}^{depth} F^k
+    Retourne : (N, sig_dim)  où sig_dim = sum_{k=1}^{depth} F^k
     """
     N, T, F = X.shape
     sig_dim = esig.sigdim(F, depth)
@@ -93,7 +93,7 @@ def train_signature(splits: dict, cfg: dict, depth: int = 2) -> dict:
     Entraîne un classifieur XGBoost sur features de signatures.
     Utilise uniquement les données labellées (comme Morrill et al.).
 
-    Returns val et test metrics.
+    Retourne les métriques de validation et de test.
     """
     if not ESIG_AVAILABLE:
         raise ImportError("esig non installé : uv add esig")

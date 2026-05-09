@@ -1,13 +1,13 @@
 """
-Main entry point for the Sepsis Prediction project.
+Point d'entrée principal pour le projet de prédiction du sepsis.
 
-Usage:
-    python main.py                        # full pipeline
-    python main.py --stage preprocess     # preprocessing only
-    python main.py --stage diffusion      # diffusion pre-training only
-    python main.py --stage classifier     # classifier training only
-    python main.py --stage evaluate       # evaluation + uncertainty analysis
-    python main.py --label_ratio 0.05     # override label ratio
+Utilisation :
+    python main.py                        # pipeline complète
+    python main.py --stage preprocess     # prétraitement uniquement
+    python main.py --stage diffusion      # pré-entraînement diffusion uniquement
+    python main.py --stage classifier     # entraînement classificateur uniquement
+    python main.py --stage evaluate       # évaluation + analyse d'incertitude
+    python main.py --label_ratio 0.05     # remplace le ratio d'étiquettes
 """
 
 from __future__ import annotations
@@ -20,7 +20,7 @@ from pathlib import Path
 import torch
 import yaml
 
-# ─── Logging setup ────────────────────────────────────────────────────────────
+# ─── Configuration de la journalisation (logging) ────────────────────────────────────────────────────────────
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s | %(levelname)s | %(name)s | %(message)s",
@@ -29,7 +29,7 @@ logging.basicConfig(
 logger = logging.getLogger("main")
 
 
-# ─── Helpers ──────────────────────────────────────────────────────────────────
+# ─── Fonctions d'aide (Helpers) ──────────────────────────────────────────────────────────────────
 
 def load_config(path: str = "configs/config.yaml") -> dict:
     with open(path) as f:
@@ -46,7 +46,7 @@ def get_device(cfg: dict) -> torch.device:
     return device
 
 
-# ─── Pipeline stages ──────────────────────────────────────────────────────────
+# ─── Étapes de la pipeline ──────────────────────────────────────────────────────────
 
 def stage_preprocess(cfg: dict) -> dict:
     from src.data.preprocess import run_preprocessing
@@ -87,7 +87,7 @@ def stage_classifier(cfg: dict, data: dict, device: torch.device) -> None:
         dropout=clf_cfg["dropout"],
     )
 
-    # Load pre-trained diffusion model for augmentation (if checkpoint exists)
+    # Charge le modèle de diffusion pré-entraîné pour l'augmentation (si le checkpoint existe)
     diffusion_model = None
     ckpt = os.path.join(cfg["training"]["checkpoint_dir"], "diffusion_best.pt")
     if os.path.exists(ckpt):
@@ -95,7 +95,7 @@ def stage_classifier(cfg: dict, data: dict, device: torch.device) -> None:
         diffusion_model = DiffusionTS(cfg).to(device)
         diffusion_model.load_state_dict(torch.load(ckpt, map_location=device))
     else:
-        logger.warning("No diffusion checkpoint found – skipping augmentation")
+        logger.warning("Aucun checkpoint de diffusion trouvé – augmentation ignorée")
 
     train_classifier(
         classifier,
@@ -146,7 +146,7 @@ def stage_evaluate(cfg: dict, data: dict, device: torch.device) -> None:
     classifier.load_state_dict(torch.load(ckpt, map_location=device))
     classifier.to(device)
 
-    # MC Dropout evaluation on test set (threshold calibrated on val set)
+    # Évaluation MC Dropout sur l'ensemble de test (seuil calibré sur l'ensemble de validation)
     results = evaluate_with_uncertainty(
         classifier,
         loaders["test"],
@@ -155,7 +155,7 @@ def stage_evaluate(cfg: dict, data: dict, device: torch.device) -> None:
         val_loader=loaders["val"],
     )
 
-    # Uncertainty–error correlation, evaluated at the operational threshold
+    # Corrélation incertitude–erreur, évaluée au seuil opérationnel
     threshold = results["metrics"]["threshold"]
     unc_stats = uncertainty_correlation(
         results["y_true"], results["mean_prob"], results["uncertainty"],
@@ -165,25 +165,25 @@ def stage_evaluate(cfg: dict, data: dict, device: torch.device) -> None:
 
     save_results(results, out_dir="results")
 
-    # Print summary table
+    # Affiche le tableau de résumé
     m = results["metrics"]
     print("\n" + "=" * 50)
-    print("TEST SET RESULTS")
+    print("RÉSULTATS SUR L'ENSEMBLE DE TEST")
     print("=" * 50)
-    print(f"  Threshold      : {m.get('threshold', 0.5):.4f}  (Youden, calibrated on val)")
+    print(f"  Seuil          : {m.get('threshold', 0.5):.4f}  (Youden, calibré sur val)")
     print(f"  AUROC          : {m['auroc']:.4f}")
     print(f"  AUPRC          : {m['auprc']:.4f}")
     print(f"  F1             : {m['f1']:.4f}")
     print(f"  Brier          : {m['brier']:.4f}")
-    print(f"  PhysioNet Util : {m['physionet_utility']:.4f}")
+    print(f"  Util PhysioNet : {m['physionet_utility']:.4f}")
     print(f"  ECE            : {m['ece']:.4f}")
     if "auac" in m:
         print(f"  AUAC           : {m['auac']:.4f}")
-    print(f"  Unc–Err corr   : {m['corr_uncertainty_error']:.3f}")
+    print(f"  Corr Incert-Err: {m['corr_uncertainty_error']:.3f}")
     print("=" * 50)
 
 
-# ─── Main ─────────────────────────────────────────────────────────────────────
+# ─── Principal ─────────────────────────────────────────────────────────────────────
 
 def parse_args():
     parser = argparse.ArgumentParser(description="Sepsis Prediction Pipeline")
@@ -209,11 +209,11 @@ def main():
 
     if args.label_ratio is not None:
         cfg["data"]["label_ratio"] = args.label_ratio
-        logger.info(f"Label ratio overridden to {args.label_ratio}")
+        logger.info(f"Ratio d'étiquettes remplacé par {args.label_ratio}")
 
     device = get_device(cfg)
 
-    # Make checkpoint / log dirs
+    # Crée les répertoires de checkpoints / journaux
     Path(cfg["training"]["checkpoint_dir"]).mkdir(parents=True, exist_ok=True)
     Path(cfg["training"]["log_dir"]).mkdir(parents=True, exist_ok=True)
 
@@ -223,7 +223,7 @@ def main():
 
     if args.stage in ("diffusion", "classifier", "evaluate", "compare", "all"):
         if data is None:
-            data = stage_preprocess(cfg)   # loads from cache if available
+            data = stage_preprocess(cfg)   # charge depuis le cache si disponible
 
     if args.stage in ("diffusion", "all"):
         stage_diffusion(cfg, data, device)

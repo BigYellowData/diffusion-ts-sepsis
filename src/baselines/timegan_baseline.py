@@ -1,15 +1,16 @@
 """
 Baseline — TimeGAN semi-supervisé (Yoon et al., NeurIPS 2019).
 
-TimeGAN entraîne 4 réseaux conjointement :
-  - Embedder E   : espace features → espace latent
-  - Recovery R   : espace latent → espace features
-  - Generator G  : bruit → espace latent (synthétique)
+TimeGAN entraîne conjointement 4 réseaux (plus un superviseur) :
+  - Embedder E      : espace des caractéristiques → espace latent
+  - Recovery R      : espace latent → espace des caractéristiques
+  - Generator G     : bruit → espace latent (synthétique)
   - Discriminator D : réel vs synthétique dans l'espace latent
+  - Supervisor S    : impose la cohérence par étapes dans l'espace latent
 
-Cadre semi-supervisé : après pré-entraînement non-supervisé,
-on génère des données synthétiques sepsis et on entraîne
-un classifieur LSTM sur données réelles + synthétiques (labellées seulement).
+Configuration semi-supervisée : après un pré-entraînement non supervisé, nous générons
+des échantillons synthétiques de sepsis et entraînons un classificateur BiLSTM sur l'union
+des données réelles étiquetées et des échantillons synthétiques.
 """
 
 from __future__ import annotations
@@ -26,10 +27,10 @@ from ..utils.metrics import compute_metrics, optimal_threshold
 logger = logging.getLogger(__name__)
 
 
-# ─── Composants TimeGAN ───────────────────────────────────────────────────────
+# ─── TimeGAN components ───────────────────────────────────────────────────────
 
 class GRUNet(nn.Module):
-    """GRU générique utilisé pour Embedder, Recovery, Generator, Discriminator."""
+    """Bloc GRU générique utilisé comme Embedder, Recovery, Generator et Discriminator."""
     def __init__(self, in_dim: int, hidden_dim: int, out_dim: int, n_layers: int = 3):
         super().__init__()
         self.gru = nn.GRU(in_dim, hidden_dim, n_layers, batch_first=True)
@@ -56,9 +57,10 @@ class TimeGAN(nn.Module):
     def discriminate(self, h): return self.discriminator(h)
 
 
-# ─── Entraînement TimeGAN ─────────────────────────────────────────────────────
+# ─── TimeGAN training ─────────────────────────────────────────────────────────
 
 def _random_noise(B: int, T: int, F: int, device) -> torch.Tensor:
+    """Échantillonne un bruit gaussien standard de dimension (B, T, F)."""
     return torch.randn(B, T, F, device=device)
 
 
@@ -72,9 +74,21 @@ def train_timegan(
     joint_epochs: int = 50,
     batch_size: int = 128,
 ) -> dict:
-    """
-    Entraîne TimeGAN et retourne les métriques val/test d'un classifieur
-    entraîné sur données réelles + synthétiques.
+    """Entraîne TimeGAN de bout en bout et évalue un classificateur BiLSTM en aval.
+
+    Pipeline :
+      1. Phase 1 — Pré-entraînement de l'Embedder et du Recovery sur la reconstruction.
+      2. Phase 2 — Pré-entraînement du Supervisor sur la prédiction de l'étape suivante dans l'espace latent.
+      3. Phase 3 — Entraînement antagoniste conjoint (mises à jour de G, E, D).
+      4. Génération d'échantillons synthétiques de sepsis.
+      5. Entraînement d'un classificateur BiLSTM sur (données réelles étiquetées + synthétiques).
+      6. Calibrage du seuil de décision via l'indice de Youden sur l'ensemble de validation.
+
+    Retours
+    -------
+    dict
+        ``{"val": metrics_dict, "test": metrics_dict}`` où chaque dictionnaire de métriques
+        contient AUROC, AUPRC, F1, ECE et l'utilité PhysioNet.
     """
     train = splits["train"]
     X_all = torch.from_numpy(train["X"]).to(device)      # (N, T, F)
@@ -92,7 +106,7 @@ def train_timegan(
     ds = TensorDataset(X_all)
     loader = DataLoader(ds, batch_size=batch_size, shuffle=True, drop_last=True)
 
-    # ── Phase 1 : pré-entraînement Embedder + Recovery (reconstruction) ───────
+    # ── Phase 1: pré-entraînement Embedder + Recovery sur la reconstruction ──────────────
     logger.info(f"[TimeGAN] Phase 1 — Embedder/Recovery pre-training ({pretrain_epochs} epochs)")
     for epoch in range(1, pretrain_epochs + 1):
         for (xb,) in loader:
@@ -101,7 +115,7 @@ def train_timegan(
             loss_r = nn.MSELoss()(x_hat, xb)
             opt_E.zero_grad(); loss_r.backward(); opt_E.step()
 
-    # ── Phase 2 : pré-entraînement Supervisor ─────────────────────────────────
+    # ── Phase 2: pré-entraînement Supervisor (prédiction étape suivante espace latent) ──
     logger.info(f"[TimeGAN] Phase 2 — Supervisor pre-training ({pretrain_epochs} epochs)")
     opt_S = optim.Adam(model.supervisor.parameters(), lr=1e-3)
     for epoch in range(1, pretrain_epochs + 1):
@@ -111,7 +125,7 @@ def train_timegan(
             loss_s = nn.MSELoss()(h_hat, h[:, 1:, :])
             opt_S.zero_grad(); loss_s.backward(); opt_S.step()
 
-    # ── Phase 3 : entraînement conjoint ───────────────────────────────────────
+    # ── Phase 3: entraînement antagoniste conjoint ──────────────────────────────────
     logger.info(f"[TimeGAN] Phase 3 — Joint training ({joint_epochs} epochs)")
     bce = nn.BCEWithLogitsLoss()
     for epoch in range(1, joint_epochs + 1):
@@ -119,7 +133,7 @@ def train_timegan(
             Bx = xb.shape[0]
             z = _random_noise(Bx, T, F, device)
 
-            # Generator step
+            # Étape du Générateur
             e_hat = model.generate(z)
             h_hat = model.supervise(e_hat)
             y_fake = model.discriminate(h_hat)
@@ -129,7 +143,7 @@ def train_timegan(
                       + 100 * (h_hat.std(1).mean() - h_real.std(1).mean()).abs())
             opt_G.zero_grad(); loss_g.backward(); opt_G.step()
 
-            # Embedder step
+            # Étape de l'Embedder
             h = model.embed(xb)
             x_hat = model.recover(h)
             h_sup = model.supervise(h[:, :-1, :])
@@ -137,7 +151,7 @@ def train_timegan(
                       + 0.1 * nn.MSELoss()(h_sup, h[:, 1:, :].detach()))
             opt_E.zero_grad(); loss_e.backward(); opt_E.step()
 
-            # Discriminator step
+            # Étape du Discriminateur
             z = _random_noise(Bx, T, F, device)
             e_hat = model.generate(z).detach()
             h_hat = model.supervise(e_hat).detach()
@@ -146,10 +160,10 @@ def train_timegan(
             y_fake = model.discriminate(h_hat)
             loss_d = (bce(y_real, torch.ones_like(y_real))
                       + bce(y_fake, torch.zeros_like(y_fake)))
-            if loss_d.item() > 0.15:   # entraîne D seulement si nécessaire
+            if loss_d.item() > 0.15:   # n'entraîne D que s'il est trop faible
                 opt_D.zero_grad(); loss_d.backward(); opt_D.step()
 
-    # ── Génération synthétique sepsis ─────────────────────────────────────────
+    # ── Génération d'échantillons synthétiques de sepsis ────────────────────────────────────
     n_pos_real = int((y_all == 1).sum().item())
     n_synth = n_pos_real * cfg["generation"]["n_synthetic_per_real"]
     logger.info(f"[TimeGAN] Generating {n_synth} synthetic sepsis samples")
@@ -160,7 +174,7 @@ def train_timegan(
         e_hat = model.generate(z)
         x_synth = model.recover(e_hat).cpu().numpy().astype(np.float32)
 
-    # ── Classifieur LSTM sur réel labellé + synthétique ───────────────────────
+    # ── Classificateur BiLSTM sur (réel étiqueté + synthétique) ─────────────────────
     labelled = train["labelled_mask"]
     keep = labelled | (train["y"] == 0)
     X_real = train["X"][keep].astype(np.float32)
@@ -239,6 +253,7 @@ def train_timegan(
 
 @torch.no_grad()
 def _clf_predict(clf, split: dict, device: torch.device) -> np.ndarray:
+    """Exécute le classificateur en mode évaluation et retourne les probabilités sigmoïdes."""
     clf.eval()
     X = torch.from_numpy(split["X"]).to(device)
     ds = TensorDataset(X)

@@ -1,11 +1,11 @@
 """
-Comparison runner: trains all baselines + loads our method results,
-then prints a formatted comparison table.
+Script de comparaison : entraîne tous les modèles de base + charge les résultats de notre méthode,
+puis affiche un tableau comparatif formaté.
 
-Baselines:
-  1. XGBoost (labelled only)
-  2. BiLSTM (labelled only)
-  3. Transformer (no augmentation)
+Modèles de base :
+  1. XGBoost (uniquement étiquetés)
+  2. BiLSTM (uniquement étiquetés)
+  3. Transformer (sans augmentation)
   4. TimeGAN semi-supervisé (Yoon et al., NeurIPS 2019)
   5. Path Signatures + XGBoost (Morrill et al., 2020 — gagnant PhysioNet 2019)
   ★ Notre méthode : Diffusion-TS + Aug + MC Dropout
@@ -29,6 +29,7 @@ logger = logging.getLogger(__name__)
 
 
 def _load_our_results() -> dict | None:
+    """Charge les résultats de notre méthode (métriques et probabilités) sauvegardés."""
     try:
         y_true    = np.load("results/y_true.npy")
         mean_prob = np.load("results/mean_prob.npy")
@@ -40,37 +41,38 @@ def _load_our_results() -> dict | None:
 
 
 def run_comparison(splits: dict, cfg: dict, device: torch.device) -> None:
+    """Exécute l'ensemble des modèles de base et affiche le tableau comparatif final."""
     rows = []
 
-    # ── Baseline 1: XGBoost ───────────────────────────────────────────────────
+    # ── Modèle de base 1 : XGBoost ───────────────────────────────────────────────
     logger.info("=" * 60)
     logger.info("BASELINE 1: XGBoost (labelled only)")
     xgb = train_xgboost(splits, cfg)
     rows.append({"method": "XGBoost (labelled only)", "type": "Supervised",
                  **_fmt(xgb["test"])})
 
-    # ── Baseline 2: BiLSTM ────────────────────────────────────────────────────
+    # ── Modèle de base 2 : BiLSTM ────────────────────────────────────────────────
     logger.info("=" * 60)
     logger.info("BASELINE 2: BiLSTM (labelled only)")
     lstm = train_lstm(splits, cfg, device)
     rows.append({"method": "BiLSTM (labelled only)", "type": "Supervised",
                  **_fmt(lstm["test"])})
 
-    # ── Baseline 3: Transformer vanilla ──────────────────────────────────────
+    # ── Modèle de base 3 : Transformer classique ─────────────────────────────────
     logger.info("=" * 60)
     logger.info("BASELINE 3: Transformer (no augmentation)")
     vanilla = train_vanilla_classifier(splits, cfg, device)
     rows.append({"method": "Transformer (no augment)", "type": "Diffusion (no semi-sup)",
                  **_fmt(vanilla["test"])})
 
-    # ── Baseline 4: TimeGAN semi-supervisé ────────────────────────────────────
+    # ── Modèle de base 4 : TimeGAN semi-supervisé ────────────────────────────────
     logger.info("=" * 60)
     logger.info("BASELINE 4: TimeGAN semi-supervisé (Yoon et al., NeurIPS 2019)")
     timegan = train_timegan(splits, cfg, device)
     rows.append({"method": "TimeGAN (semi-sup.)", "type": "GAN-based",
                  **_fmt(timegan["test"])})
 
-    # ── Baseline 5: Path Signatures ───────────────────────────────────────────
+    # ── Modèle de base 5 : Path Signatures ───────────────────────────────────────
     logger.info("=" * 60)
     logger.info("BASELINE 5: Path Signatures + XGBoost (Morrill et al., 2020)")
     try:

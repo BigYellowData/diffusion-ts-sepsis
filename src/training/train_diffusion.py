@@ -1,11 +1,11 @@
 """
-Pre-training loop for the Diffusion-TS model.
+Boucle de pré-entraînement pour le modèle Diffusion-TS.
 
-Strategy:
-  - Train on ALL windows (labelled + unlabelled) without label info
-    → unsupervised learning of the patient trajectory distribution
-  - When labelled samples are in the batch, also train the conditional path
-    with classifier-free guidance dropout
+Stratégie :
+  - Entraîner sur TOUTES les fenêtres (étiquetées + non étiquetées) sans information d'étiquette
+    → apprentissage non supervisé de la distribution de trajectoire des patients
+  - Lorsque des échantillons étiquetés sont dans le lot, entraîner également le chemin conditionnel
+    avec le dropout 'classifier-free guidance'
 """
 
 from __future__ import annotations
@@ -30,14 +30,14 @@ def train_diffusion(
     save_dir: str = "checkpoints",
 ) -> None:
     """
-    Train the DiffusionTS model.
+    Entraîne le modèle DiffusionTS.
 
-    Args:
-        model      – DiffusionTS instance
-        dataloader – DataLoader yielding {'x', 'mask', 'y', 'labelled'}
-        cfg        – full config dict
-        device     – torch device
-        save_dir   – directory to save checkpoints
+    Args :
+        model      – Instance de DiffusionTS
+        dataloader – DataLoader fournissant {'x', 'mask', 'y', 'labelled'}
+        cfg        – Dictionnaire de configuration complet
+        device     – Périphérique (device) torch
+        save_dir   – Répertoire de sauvegarde des points de contrôle (checkpoints)
     """
     Path(save_dir).mkdir(parents=True, exist_ok=True)
     epochs = cfg["training"]["diffusion_epochs"]
@@ -57,12 +57,12 @@ def train_diffusion(
             x = batch["x"].to(device)                    # (B, T, F)
             mask = batch["mask"].to(device)              # (B, T, F)
             y = batch["y"].to(device)                    # (B,)
-            labelled = batch["labelled"].to(device)      # (B,) – 1 if label known
+            labelled = batch["labelled"].to(device)      # (B,) – 1 si l'étiquette est connue
 
-            # Build class conditioning: labelled samples get their true label,
-            # unlabelled get the UNCOND_TOKEN (will be handled inside loss())
+            # Construit le conditionnement de classe : les échantillons étiquetés obtiennent leur vraie étiquette,
+            # les non étiquetés obtiennent le UNCOND_TOKEN (sera géré dans loss())
             cond = y.long()
-            # Mask unlabelled samples with the uncond token
+            # Masque les échantillons non étiquetés avec le token inconditionnel
             cond[labelled == 0] = model.UNCOND_TOKEN
 
             optimizer.zero_grad()
