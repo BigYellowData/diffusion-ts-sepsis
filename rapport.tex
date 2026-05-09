@@ -134,25 +134,67 @@ Ce rapport présente l'adaptation de \textbf{Diffusion-TS} \cite{diffusion-ts}, 
 génératif de séries temporelles publié à ICLR 2024, dans un cadre semi-supervisé avec
 quantification de l'incertitude bayésienne par Monte Carlo Dropout \cite{gal2016dropout}.
 
+\paragraph{Contributions principales.} Ce projet apporte trois contributions complémentaires :
+\begin{enumerate}[leftmargin=2em, itemsep=0.2em]
+    \item \textbf{Adaptation de Diffusion-TS au domaine clinique} : transposition d'un
+    modèle DDPM conçu pour des séries temporelles génériques aux trajectoires multivariées
+    d'unités de soins intensifs (40 variables, 24~h glissantes, fortes valeurs manquantes).
+    \item \textbf{Génération conditionnelle semi-supervisée} : entraînement du modèle de
+    diffusion sur \emph{l'ensemble} du dataset (labellé + non labellé) avec
+    \emph{classifier-free guidance}, pour produire des trajectoires synthétiques de
+    sepsis qui rééquilibrent un classifieur Transformer.
+    \item \textbf{Quantification de l'incertitude par MC Dropout} : production d'un score
+    d'incertitude par échantillon, dont la corrélation avec l'erreur (variance
+    $\times 6.6$ plus élevée sur les prédictions incorrectes) permet une stratégie
+    d'abstention clinique.
+\end{enumerate}
+
+Sur le jeu de test (10~\% de labels), notre méthode atteint AUROC~=~0.868,
+AUPRC~=~0.136 et un score d'utilité PhysioNet de $-0.080$, surpassant cinq baselines
+(XGBoost, BiLSTM, Transformer sans augmentation, TimeGAN, Path Signatures).
+
 % ── 2. Approche ────────────────────────────────────────────────────────────────
 
 \section{Approche Proposée}
+
+L'objectif final est un \textbf{classifieur} de sepsis robuste malgré le faible nombre de
+patients labellés. Pour y parvenir, nous chaînons deux modèles distincts : un modèle de
+diffusion qui \emph{génère} des trajectoires patients synthétiques étiquetées sepsis,
+suivi d'un classifieur Transformer qui \emph{prédit} le sepsis sur les données réelles
+augmentées par ces synthétiques. Cette séparation permet à la diffusion d'exploiter la
+totalité du dataset (labellé + non labellé) pour apprendre la structure des trajectoires,
+là où un classifieur supervisé classique se limiterait aux 10~\% labellés.
 
 Notre approche repose sur trois composantes distinctes et complémentaires.
 
 \subsection{Génération conditionnelle pour l'augmentation de données}
 
-Diffusion-TS est un modèle DDPM dont le débruiteur est un Transformer avec décomposition
-tendance/saisonnalité. Nous exploitons le mécanisme de \emph{classifier-free guidance}
-pour générer des trajectoires synthétiques conditionnées par la classe (sepsis vs non-sepsis).
+\paragraph{Principe d'un modèle de diffusion (DDPM).}
+Un modèle DDPM apprend à \emph{inverser} un processus qui dégrade progressivement une
+donnée réelle $x_0$ en bruit gaussien $x_T \sim \mathcal{N}(0, I)$ sur $T$ pas. Pendant
+l'entraînement, le réseau apprend à prédire le bruit ajouté à chaque étape ; à l'inférence,
+on part de bruit pur et on déroule le processus inverse pour synthétiser une donnée
+propre. Diffusion-TS \cite{diffusion-ts} adapte ce paradigme aux séries temporelles via
+un débruiteur Transformer dont la sortie est explicitement décomposée en une composante
+\emph{tendance} (lente) et une composante \emph{saisonnalité} (rapide), ce qui aide
+à capturer la structure clinique des trajectoires.
 
 \paragraph{Schedule de bruit cosinus \cite{nichol2021improved}.}
+Le rythme auquel le bruit est ajouté est défini par le coefficient $\bar{\alpha}_t$ ;
+le schedule cosinus ajoute le bruit plus lentement au début et à la fin du processus,
+ce qui stabilise l'entraînement sur des séries courtes (24 pas de temps).
 \[
 \bar{\alpha}_t = \frac{f(t)}{f(0)}, \quad
 f(t) = \cos\!\left(\frac{t/T + s}{1+s} \cdot \frac{\pi}{2}\right)^2, \quad s = 0.008
 \]
 
-\paragraph{Guidance sans classifieur.}
+\paragraph{Classifier-free guidance (CFG).}
+Pour générer des trajectoires d'une classe \emph{spécifique} (sepsis), on entraîne le
+même réseau à connaître à la fois la distribution générale (sans label, $\emptyset$)
+et la distribution conditionnelle (avec label $c$). À l'échantillonnage, on combine
+les deux prédictions de bruit avec un coefficient $\gamma$ qui contrôle le degré de
+conformité à la classe : $\gamma = 1$ correspond à l'échantillonnage purement
+conditionnel, $\gamma > 1$ accentue l'effet de la classe au prix de la diversité.
 \[
 \hat{\epsilon} = \epsilon_\theta(x_t, t, \emptyset)
     + \gamma \bigl[\epsilon_\theta(x_t, t, c) - \epsilon_\theta(x_t, t, \emptyset)\bigr],
@@ -168,13 +210,80 @@ configuration principale, soit 215 patients sur 2 157).
 
 \subsection{Incertitude bayésienne via Monte Carlo Dropout}
 
-Des couches Dropout ($p=0.2$) sont maintenues actives à l'inférence. $N=50$ passes
-stochastiques produisent une distribution de prédictions :
+L'idée de \cite{gal2016dropout} est que conserver le \emph{Dropout actif à l'inférence}
+revient à échantillonner différentes sous-architectures du réseau, ce qui approxime
+une distribution postérieure bayésienne sur les poids. En moyennant $N$ passes
+stochastiques, on obtient une estimation plus stable de la probabilité ; en mesurant
+leur variance, on obtient un score d'incertitude par échantillon. Concrètement, des
+couches Dropout ($p=0.2$) sont maintenues actives à l'évaluation, et $N=50$ passes
+produisent :
 \[
 p^*(y=1 \mid x) = \frac{1}{N}\sum_{n=1}^N \sigma\!\bigl(f_{\hat{\theta}_n}(x)\bigr),
 \qquad
 \text{Unc}(x) = \mathrm{Var}_{n}\!\left[\sigma\!\bigl(f_{\hat{\theta}_n}(x)\bigr)\right]
 \]
+
+\subsection{Vue d'ensemble du pipeline}
+
+La figure~\ref{fig:pipeline} synthétise les trois composantes : Diffusion-TS apprend
+sur l'intégralité du dataset, génère des trajectoires synthétiques de sepsis qui
+rééquilibrent l'entraînement du classifieur, lequel produit \emph{in fine} la
+prédiction et son score d'incertitude.
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[
+    node distance = 0.7cm and 1.6cm,
+    box/.style = {rectangle, rounded corners=4pt, minimum width=3.8cm,
+                  minimum height=0.75cm, align=center, font=\small},
+    data/.style  = {box, fill=blockgray,   draw=gray!60},
+    diff/.style  = {box, fill=blockblue,   draw=blue!40},
+    clf/.style   = {box, fill=blockgreen,  draw=green!50!black},
+    gen/.style   = {box, fill=blockorange, draw=orange!60},
+    out/.style   = {box, fill=yellow!20,   draw=orange!80, font=\small\bfseries},
+    arr/.style   = {-{Stealth[length=5pt]}, thick},
+]
+
+%% Colonne centrale
+\node[data]  (raw)    {Données brutes\\PhysioNet 2019\\(40 336 patients)};
+\node[data,  below=of raw]   (prep)   {Prétraitement\\normalisation · fenêtrage · masque\\(125 988 fenêtres)};
+\node[diff,  below=of prep]  (difftrain) {Diffusion-TS\\entraînement semi-supervisé\\100 epochs --- loss = 0.085};
+
+%% Branche gauche
+\node[gen, below left=0.9cm and 1.0cm of difftrain]  (gen)
+    {Génération conditionnelle\\(DDIM, 50 steps)\\6 471 synth. sepsis};
+
+%% Branche droite
+\node[diff, below right=0.9cm and 1.0cm of difftrain] (repr)
+    {Distribution apprise\\des trajectoires\\patients};
+
+%% Classifieur
+\node[clf, below=2.1cm of difftrain] (clf)
+    {Classifieur Transformer\\+ MC Dropout ($N=50$)\\early stop epoch 8 / AUROC 0.852};
+
+%% Sortie
+\node[out, below=of clf] (out)
+    {Prédiction sepsis\\+ Score d'incertitude};
+
+%% Flèches colonne centrale
+\draw[arr] (raw)      -- (prep);
+\draw[arr] (prep)     -- (difftrain);
+\draw[arr] (difftrain.south west) -- (gen.north);
+\draw[arr] (difftrain.south east) -- (repr.north);
+\draw[arr] (gen.south)  -- (clf.north west);
+\draw[arr] (repr.south) -- (clf.north east);
+\draw[arr] (clf)      -- (out);
+
+%% Labels sur les flèches bifurquées
+\node[font=\footnotesize, text=blue!60] at ([xshift=-1.2cm,yshift=-0.35cm]difftrain.south)
+    {augmentation};
+\node[font=\footnotesize, text=blue!60] at ([xshift=1.4cm,yshift=-0.35cm]difftrain.south)
+    {représentation};
+
+\end{tikzpicture}
+\caption{Pipeline complet du système de prédiction du sepsis.}
+\label{fig:pipeline}
+\end{figure}
 
 % ── 3. Dataset ─────────────────────────────────────────────────────────────────
 
@@ -227,7 +336,7 @@ Total & 125 988 & 2 883 & 2.29~\% \\
 
 % ── 4. Architecture et Pipeline ───────────────────────────────────────────────
 
-\section{Architecture et Pipeline Technique}
+\section{Architecture des Réseaux}
 
 \subsection{Débruiteur Diffusion-TS}
 
@@ -247,63 +356,6 @@ Total & 125 988 & 2 883 & 2.29~\% \\
     \item \textbf{Tête} : MLP $128 \to 64 \to 1$.
     \item \textbf{Seuil} : indice de Youden calibré sur le jeu de validation.
 \end{itemize}
-
-\subsection{Pipeline complet}
-
-\begin{figure}[H]
-\centering
-\begin{tikzpicture}[
-    node distance = 0.7cm and 1.6cm,
-    box/.style = {rectangle, rounded corners=4pt, minimum width=3.8cm,
-                  minimum height=0.75cm, align=center, font=\small},
-    data/.style  = {box, fill=blockgray,   draw=gray!60},
-    diff/.style  = {box, fill=blockblue,   draw=blue!40},
-    clf/.style   = {box, fill=blockgreen,  draw=green!50!black},
-    gen/.style   = {box, fill=blockorange, draw=orange!60},
-    out/.style   = {box, fill=yellow!20,   draw=orange!80, font=\small\bfseries},
-    arr/.style   = {-{Stealth[length=5pt]}, thick},
-]
-
-%% Colonne centrale
-\node[data]  (raw)    {Données brutes\\PhysioNet 2019\\(40 336 patients)};
-\node[data,  below=of raw]   (prep)   {Prétraitement\\normalisation · fenêtrage · masque\\(125 988 fenêtres)};
-\node[diff,  below=of prep]  (difftrain) {Diffusion-TS\\entraînement semi-supervisé\\100 epochs --- loss = 0.085};
-
-%% Branche gauche
-\node[gen, below left=0.9cm and 1.0cm of difftrain]  (gen)
-    {Génération conditionnelle\\(DDIM, 50 steps)\\6 471 synth. sepssis};
-
-%% Branche droite
-\node[diff, below right=0.9cm and 1.0cm of difftrain] (repr)
-    {Distribution apprise\\des trajectoires\\patients};
-
-%% Classifieur
-\node[clf, below=2.1cm of difftrain] (clf)
-    {Classifieur Transformer\\+ MC Dropout ($N=50$)\\early stop epoch 8 / AUROC 0.852};
-
-%% Sortie
-\node[out, below=of clf] (out)
-    {Prédiction sepsis\\+ Score d'incertitude};
-
-%% Flèches colonne centrale
-\draw[arr] (raw)      -- (prep);
-\draw[arr] (prep)     -- (difftrain);
-\draw[arr] (difftrain.south west) -- (gen.north);
-\draw[arr] (difftrain.south east) -- (repr.north);
-\draw[arr] (gen.south)  -- (clf.north west);
-\draw[arr] (repr.south) -- (clf.north east);
-\draw[arr] (clf)      -- (out);
-
-%% Labels sur les flèches bifurquées
-\node[font=\footnotesize, text=blue!60] at ([xshift=-1.2cm,yshift=-0.35cm]difftrain.south)
-    {augmentation};
-\node[font=\footnotesize, text=blue!60] at ([xshift=1.4cm,yshift=-0.35cm]difftrain.south)
-    {représentation};
-
-\end{tikzpicture}
-\caption{Pipeline complet du système de prédiction du sepsis.}
-\label{fig:pipeline}
-\end{figure}
 
 % ── 5. Résultats ───────────────────────────────────────────────────────────────
 
@@ -413,7 +465,7 @@ Seuil optimal (Youden, val set)  & 0.0178 \\
 \centering
 \begin{subfigure}[b]{0.56\textwidth}
     \includegraphics[width=\textwidth]{figures/calibration.pdf}
-    \caption{Diagramme de fiabilité et distribution des probabilités (ECE = 0.006)}
+    \caption{Diagramme de fiabilité et distribution des probabilités (ECE = 0.009)}
 \end{subfigure}
 \hfill
 \begin{subfigure}[b]{0.42\textwidth}
@@ -451,10 +503,10 @@ conditionnel. Le modèle de diffusion est ré-entraîné à chaque ratio.}
 \textbf{F1}$\uparrow$ & \textbf{ECE}$\downarrow$ \\
 \midrule
 5\%  & 108  & 0.8642 & 0.1443 & 0.1410 & 0.0170 \\
-\rowcolor{bestrow}
-10\% & 215  & 0.8684 & 0.1356 & 0.1228 & \textbf{0.0058} \\
+10\% & 215  & 0.8679 & 0.1363 & 0.1139 & 0.0088 \\
 25\% & 539  & 0.8669 & \textbf{0.1484} & 0.1153 & 0.0179 \\
-50\% & 1078 & 0.8679 & 0.1363 & 0.1139 & 0.0088 \\
+\rowcolor{bestrow}
+50\% & 1078 & 0.8684 & 0.1356 & 0.1228 & \textbf{0.0058} \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -507,9 +559,10 @@ synthétiques générées est optimal à ce ratio. En dessous (5--10\%), les syn
 moins fidèles faute de supervision ; au-dessus (50\%), le surplus de labels n'apporte pas
 de gain car la distribution est déjà bien capturée.
 
-L'ECE est minimale à 10\% (0.0058) — la configuration la mieux calibrée — et se dégrade
-légèrement aux extrêmes, ce qui indique que la calibration bayésienne du MC Dropout dépend
-légèrement de la qualité des données d'entraînement.
+L'ECE est minimale à 50\% (0.0058) — la configuration la mieux calibrée — tandis qu'à
+25\% on observe le plus mauvais ECE (0.0179) malgré la meilleure AUPRC. La calibration
+bayésienne du MC Dropout n'évolue donc pas de façon monotone avec le ratio de labels,
+mais reste partout inférieure à 0.02, ce qui demeure cliniquement acceptable.
 
 \subsection{Entraînement et early stopping}
 
@@ -531,11 +584,15 @@ de coût clinique : pénalité FN = $-2.0$, pénalité FP = $-0.05$.
 \begin{enumerate}
     \item \textbf{AUPRC modeste (0.136)} : les meilleures solutions du challenge
     PhysioNet 2019 atteignaient 0.3--0.5 avec accès à l'intégralité des labels.
-    \item \textbf{Diffusion sous-entraînée} : 100 epochs suffisent pour converger
+    \item \textbf{Diffusion sous-entraînée} : 100 epochs suffisent pour faire converger
     la loss mais pas pour générer des échantillons optimaux. Un entraînement à
-    200+ epochs amélioreraient la qualité des synthétiques.
-    \item \textbf{Ratio de labels fixe à 10~\%} : l'étude ablative (5~\%, 25~\%, 50~\%)
-    reste à réaliser pour quantifier la robustesse de l'approche.
+    200+ epochs améliorerait la qualité des synthétiques.
+    \item \textbf{Score d'utilité simplifié} : nous utilisons une approximation du score
+    PhysioNet 2019 (TP/FP/FN/TN constants par fenêtre) au lieu de la version officielle
+    par-patient avec décroissance temporelle (\texttt{dt\_early}, \texttt{dt\_optimal},
+    \texttt{dt\_late}). Les valeurs absolues ne sont donc pas directement comparables
+    aux scores du challenge ; les comparaisons inter-méthodes au sein de ce rapport
+    restent cohérentes car toutes utilisent la même formule.
 \end{enumerate}
 
 % ── 7. Conclusion ──────────────────────────────────────────────────────────────
