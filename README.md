@@ -121,79 +121,133 @@ uv run python -c "import torch; print(torch.cuda.get_device_name(0))"
 
 ## Utilisation
 
+### Pipeline complet (re-entraînement de zéro)
+
 ```bash
-# Pipeline complet
+# Tout en une commande — preprocessing → diffusion → classifieur → évaluation → comparaison → figures
 uv run python main.py --stage all
 
-# Étapes individuelles
-uv run python main.py --stage preprocess   # ~4 min, mis en cache ensuite
-uv run python main.py --stage diffusion    # ~25 min (100 epochs, RTX 4060 Ti)
-uv run python main.py --stage classifier   # ~15 min avec early stopping
-uv run python main.py --stage evaluate     # MC Dropout, 50 passes
-uv run python main.py --stage compare      # Comparaison avec les baselines
-uv run python main.py --stage plots       # Génère les figures (figures/)
+# Avec config personnalisée
+uv run python main.py --stage all --config configs/config.yaml
+```
 
-# Changer le ratio de labels (semi-supervisé)
-uv run python main.py --stage all --label_ratio 0.05   # 5% de labels
-uv run python main.py --stage all --label_ratio 0.25   # 25% de labels
+### Étapes individuelles
+
+```bash
+uv run python main.py --stage preprocess   # ~4 min — fenêtrage 24h, masque, splits patient-level
+uv run python main.py --stage diffusion    # ~25 min — Diffusion-TS, 100 epochs, RTX 4060 Ti
+uv run python main.py --stage classifier   # ~15 min — Transformer + MC Dropout, early stopping
+uv run python main.py --stage evaluate     # ~1 min — 50 passes MC Dropout sur le test
+uv run python main.py --stage compare      # ~15 min — entraîne et compare 5 baselines
+uv run python main.py --stage plots        # ~10 sec — génère ROC, PR, calibration, abstention
+```
+
+### Étude d'ablation : variation du ratio de labels
+
+```bash
+uv run python main.py --stage all --label_ratio 0.05   # 5%  de labels (108 positifs)
+uv run python main.py --stage all --label_ratio 0.10   # 10% de labels (215 positifs) — config par défaut
+uv run python main.py --stage all --label_ratio 0.25   # 25% de labels (539 positifs)
+uv run python main.py --stage all --label_ratio 0.50   # 50% de labels (1078 positifs)
 ```
 
 ### Notebook de démonstration
 
-Pour parcourir le pipeline en mode interactif (sans ré-entraîner) :
-
 ```bash
-uv run jupyter lab notebooks/demo.ipynb
+uv run jupyter lab notebooks/demo.ipynb           # ouvre le notebook en mode interactif
+uv run jupyter nbconvert --to notebook --execute \
+       notebooks/demo.ipynb --inplace             # ré-exécute toutes les cellules
 ```
 
-Le notebook charge les checkpoints et illustre, cellule par cellule : chargement du
-dataset, génération de trajectoires synthétiques par diffusion, prédiction avec
-MC Dropout sur 4 cas représentatifs (TP, TN, FP incertain, FN), et lecture des
-métriques globales.
+Le notebook illustre cellule par cellule : chargement du dataset, génération de trajectoires synthétiques, prédiction MC Dropout sur 4 cas représentatifs (TP, TN, FP incertain, FN), métriques globales. **Sorties pré-peuplées** dans le fichier — lisible sans exécution.
 
-**Pré-requis pour exécuter le notebook :**
-- Les checkpoints `checkpoints/diffusion_best.pt` et `checkpoints/classifier_best.pt` sont **inclus dans le repo** (~4 MB combinés).
-- Les résultats déjà calculés (`results/*.npy`, `results/metrics.json`) sont aussi inclus.
-- En revanche `data/processed/splits.npz` (924 MB) n'est pas dans le repo : pour exécuter les cellules qui affichent un patient réel, il faut au préalable lancer `uv run python main.py --stage preprocess` (~4 min).
+> **Pré-requis pour ré-exécuter** :
+> - Checkpoints `_best.pt` → ✅ inclus dans le repo (~4 MB)
+> - Résultats `results/*.npy` + `metrics.json` → ✅ inclus
+> - `data/processed/splits.npz` (924 MB) → non versionné. Lancer `--stage preprocess` au préalable si on veut voir les cellules de visualisation patient.
 
-Les sorties du notebook sont déjà peuplées dans le fichier livré, donc **on peut le lire intégralement sans l'exécuter**.
+### Tests
+
+```bash
+uv run pytest                # 76 tests, ~1 seconde
+uv run pytest -v             # mode verbose
+uv run pytest tests/test_metrics.py   # un fichier spécifique
+```
+
+### Compilation du rapport LaTeX (optionnelle)
+
+```bash
+latexmk -pdf rapport.tex     # 2 passes pour résoudre les citations
+```
+
+> Le `rapport.pdf` compilé est versionné, recompilation utile uniquement si tu modifies `rapport.tex`.
 
 ---
 
-## Architecture
+## Architecture du projet
 
 ```
-src/
-├── data/
-│   ├── preprocess.py     # Chargement parallèle, fenêtrage, normalisation
-│   └── dataset.py        # PyTorch Dataset + DataLoaders
-├── models/
-│   ├── denoiser.py       # Transformer débruiteur (trend/seasonal + MC Dropout)
-│   ├── diffusion_ts.py   # DDPM complet (cosine schedule, DDIM, CFG)
-│   └── classifier.py     # Transformer + [CLS] token + MC Dropout
-├── training/
-│   ├── train_diffusion.py   # Entraînement semi-supervisé
-│   └── train_classifier.py  # Augmentation + class-balanced loss + early stopping
-├── baselines/
-│   ├── xgboost_baseline.py
-│   ├── lstm_baseline.py
-│   ├── diffusion_vanilla.py
-│   ├── timegan_baseline.py
-│   ├── signature_baseline.py
-│   └── compare.py
-└── utils/
-    ├── metrics.py      # AUROC, AUPRC, F1, PhysioNet utility, ECE, abstention curve
-    ├── uncertainty.py  # Évaluation MC Dropout, corrélation incertitude–erreur
-    └── plots.py        # Génération des figures (ROC, PR, calibration, abstention)
-```
-
----
-
-## Tests
-
-```bash
-uv run pytest          # 76 tests, ~1 seconde
-uv run pytest -v       # mode verbose
+diffusion-ts-sepsis/
+├── main.py                          # CLI principal : --stage {preprocess,diffusion,classifier,
+│                                    #                         evaluate,compare,plots,all}
+│                                    #                 [--config CONFIG] [--label_ratio FLOAT]
+├── configs/
+│   └── config.yaml                  # Tous les hyperparamètres (diffusion, classifieur, semi-sup)
+│
+├── src/
+│   ├── data/
+│   │   ├── preprocess.py            # Chargement parallèle PSV, fenêtrage 24h, masque NaN, splits
+│   │   └── dataset.py               # PyTorch Dataset + DataLoaders avec labelled_mask
+│   ├── models/
+│   │   ├── denoiser.py              # Transformer débruiteur (décomposition trend/seasonal)
+│   │   ├── diffusion_ts.py          # DDPM complet : cosine schedule, DDIM, CFG, generate_class()
+│   │   └── classifier.py            # Transformer + [CLS] token + MC Dropout (50 passes)
+│   ├── training/
+│   │   ├── train_diffusion.py       # Boucle semi-sup. : labellés get cond=0/1, autres get UNCOND
+│   │   └── train_classifier.py      # Génère 6471 synth. → augmente le train → class-balanced loss
+│   ├── baselines/
+│   │   ├── xgboost_baseline.py      # Features agrégées + XGBoost
+│   │   ├── lstm_baseline.py         # BiLSTM supervisé
+│   │   ├── diffusion_vanilla.py     # Transformer sans augmentation (mesure du gain de la diffusion)
+│   │   ├── timegan_baseline.py      # TimeGAN semi-supervisé (Yoon et al. NeurIPS 2019)
+│   │   ├── signature_baseline.py    # Path Signatures + XGBoost (Morrill et al. CinC 2019)
+│   │   └── compare.py               # Entraîne + compare les 5 baselines, génère le tableau
+│   └── utils/
+│       ├── metrics.py               # AUROC, AUPRC, F1, ECE, PhysioNet utility, abstention curve
+│       ├── uncertainty.py           # Évaluation MC Dropout, corrélation incertitude–erreur
+│       └── plots.py                 # Figures ROC, PR, calibration, abstention, uncertainty_dist
+│
+├── tests/                           # 76 tests pytest (~1 sec)
+│   ├── conftest.py
+│   ├── test_dataset.py
+│   ├── test_metrics.py
+│   ├── test_models.py
+│   ├── test_preprocess.py
+│   └── test_uncertainty.py
+│
+├── notebooks/
+│   └── demo.ipynb                   # Démonstration interactive (sorties peuplées)
+│
+├── checkpoints/                     # Modèles pré-entraînés (versionnés sélectivement)
+│   ├── diffusion_best.pt            # ✅ inclus, utilisé pour la génération
+│   └── classifier_best.pt           # ✅ inclus, utilisé pour la prédiction
+│
+├── results/                         # Sorties d'évaluation (versionnées)
+│   ├── y_true.npy / mean_prob.npy / uncertainty.npy
+│   └── metrics.json                 # AUROC, AUPRC, F1, ECE, Util, etc.
+│
+├── figures/                         # Figures du rapport (PDF + PNG)
+│   ├── roc_curve.pdf, pr_curve.pdf
+│   ├── calibration.pdf, abstention.pdf, uncertainty_dist.pdf
+│   ├── synthetic_vs_real.{pdf,png}            # 6 trajectoires réelles vs 6 synthétiques
+│   └── distribution_real_vs_synth.{pdf,png}   # Histogrammes marginaux
+│
+├── rapport.tex / rapport.pdf        # Rapport LaTeX 14 pages (CY Tech, ING 3, GenAI)
+├── pyproject.toml / uv.lock         # Dépendances gérées par uv
+├── pytest.ini                       # Config pytest
+├── CY_Tech_logo.jpg                 # Logo pour la page de titre
+├── .gitignore                       # data/processed/ et checkpoints/_final exclus
+└── README.md                        # Ce fichier
 ```
 
 ---
