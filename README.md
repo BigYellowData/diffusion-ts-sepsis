@@ -16,7 +16,7 @@ Données brutes (40 336 patients)
         ↓  Diffusion-TS (semi-supervisé, 100 epochs)
    ↙                            ↘
 Génération conditionnelle      Représentation apprise
-(6 471 synth. sepsis)          des trajectoires patients
+(6 450 synth. sepsis)          des trajectoires patients
    ↘                            ↙
 Classifieur Transformer + MC Dropout (N=50)
         ↓
@@ -27,7 +27,7 @@ Prédiction + Score d'incertitude
 
 - **Génération conditionnelle par diffusion** — trajectoires synthétiques de sepsis (CFG, γ=1.5) qui rééquilibrent un dataset très déséquilibré
 - **Cadre semi-supervisé** — la diffusion apprend sur 100 % des patients ; seul le guidage utilise les 10 % étiquetés
-- **Incertitude bayésienne via MC Dropout** — variance ×12.8 plus élevée sur les erreurs : le modèle sait quand il hésite
+- **Incertitude bayésienne via MC Dropout** — variance ×10.5 plus élevée sur les erreurs : le modèle sait quand il hésite
 
 ---
 
@@ -58,9 +58,9 @@ Et la distribution marginale des 200 échantillons synthétiques recouvre largem
 
 † Morrill et al. (2020) — 1er PhysioNet/CinC 2019
 
-- Seuil calibré par l'indice de Youden sur la validation (seuil optimal = 0.018)
-- Score d'utilité PhysioNet : −0.080 (vs −1.97 avec seuil naïf à 0.5)
-- Variance MC Dropout : ×12.8 plus élevée sur les erreurs (au seuil opérationnel) → incertitude corrélée aux erreurs (Pearson r = 0.43)
+- Seuil calibré par l'indice de Youden sur la validation (seuil optimal = 0.0020)
+- Score d'utilité PhysioNet : −0.245 (vs −1.97 avec seuil naïf à 0.5)
+- Variance MC Dropout : ×10.5 plus élevée sur les erreurs (au seuil opérationnel) → incertitude corrélée aux erreurs (Pearson r = 0.30)
 
 ### Exemple concret (4 cas du test set)
 
@@ -68,23 +68,23 @@ Pour chaque cas : plage des signes vitaux observés sur la fenêtre 24h, puis so
 
 | Cas | HR (bpm) | Temp (°C) | MAP (mmHg) | Lactate | `y_true` | **P(sepsis)** | Var MC ×10⁻³ | Décision |
 |---|---|---|---|---|---|---|---|---|
-| TP confiant | 79–100 | 37.1–38.0 | 67–109 | non mesuré | sepsis | 0.419 | 1.07 | SEPSIS ✓ |
-| TN confiant | 52–100 | 36.1–36.7 | 73–96 | non mesuré | sain | 0.002 | 0.001 | non-sepsis ✓ |
-| **FP incertain** | 86–**135** | 36.6–37.7 | 92→**69** | non mesuré | sain | 0.728 | **19.5** | SEPSIS ✗ |
-| FN | 62–86 | **35.0**–36.6 | 80–148 | 0.9–1.3 | sepsis | 0.013 | 0.12 | non-sepsis ✗ |
+| TP confiant | 79–100 | 37.1–38.0 | 67–109 | non mesuré | sepsis | 0.054 | 0.45 | SEPSIS ✓ |
+| TN confiant | 52–100 | 36.1–36.7 | 73–96 | non mesuré | sain | 0.001 | 0.001 | non-sepsis ✓ |
+| **FP incertain** | 86–**135** | 36.6–37.7 | 92→**69** | non mesuré | sain | 0.052 | **0.46** | SEPSIS ✗ |
+| FN | 62–86 | **35.0**–36.6 | 80–148 | 0.9–1.3 | sepsis | 0.001 | 0.002 | non-sepsis ✗ |
 
-> Le **FP incertain** illustre la valeur clinique de MC Dropout : le modèle se trompe (le patient n'est pas septique) **mais sa variance est ×20 supérieure** à celle d'un TP confiant. Un système d'alerte intégrant l'incertitude pourrait signaler ce cas pour vérification humaine plutôt que déclencher une alarme automatique. À l'inverse, le **FN** est un échec silencieux : le modèle rate le sepsis ET ne le signale pas (variance basse) — typiquement un sepsis débutant masqué par une hypothermie atypique.
+> Le **FP incertain** illustre la valeur clinique de MC Dropout : le modèle se trompe (le patient n'est pas septique) **mais sa variance est comparable à celle du TP confiant**, signalant un cas ambigu. Un système d'alerte intégrant l'incertitude pourrait signaler ce cas pour vérification humaine plutôt que déclencher une alarme automatique. À l'inverse, le **FN** est un échec silencieux : le modèle rate le sepsis ET ne le signale pas (variance très basse) — typiquement un sepsis débutant masqué par une hypothermie atypique.
 
 ### Ablation : ratio de labels
 
 | Ratio | Labels (+) | AUROC | AUPRC | F1 | ECE |
 |---|---|---|---|---|---|
-| 5% | 108 | 0.8642 | 0.1443 | **0.1410** | 0.0170 |
-| 10% | 215 | 0.8679 | 0.1363 | 0.1139 | 0.0088 |
-| 25% | 539 | 0.8669 | **0.1484** | 0.1153 | 0.0179 |
-| **50%** | **1078** | **0.8684** | 0.1356 | 0.1228 | **0.0058** |
+| 5% | 107 | 0.8035 | 0.0910 | 0.1266 | 0.0183 |
+| 10% | 215 | 0.8198 | 0.1069 | 0.0995 | 0.0180 |
+| 25% | 539 | 0.8566 | **0.1347** | 0.1519 | 0.0133 |
+| **50%** | **1078** | **0.8597** | 0.1305 | **0.1578** | **0.0019** |
 
-> L'AUROC varie de seulement **0.004 points** sur toute la plage 5–50% : la représentation apprise par diffusion sur les données non-labellées est suffisante, le guidage conditionnel est secondaire.
+> La performance croît de manière monotone avec le ratio de labels (AUROC 0.80 → 0.86), confirmant l'apport du guidage conditionnel. L'augmentation par diffusion permet toutefois d'atteindre un AUROC de 0.80 avec seulement 107 fenêtres positives labellées (5%).
 
 ---
 
@@ -204,7 +204,7 @@ diffusion-ts-sepsis/
 │   │   └── classifier.py            # Transformer + [CLS] token + MC Dropout (50 passes)
 │   ├── training/
 │   │   ├── train_diffusion.py       # Boucle semi-sup. : labellés get cond=0/1, autres get UNCOND
-│   │   └── train_classifier.py      # Génère 6471 synth. → augmente le train → class-balanced loss
+│   │   └── train_classifier.py      # Génère 6450 synth. → augmente le train → class-balanced loss
 │   ├── baselines/
 │   │   ├── xgboost_baseline.py      # Features agrégées + XGBoost
 │   │   ├── lstm_baseline.py         # BiLSTM supervisé

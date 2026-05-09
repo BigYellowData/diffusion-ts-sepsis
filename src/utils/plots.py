@@ -5,7 +5,7 @@ Figures produites (sauvegardées dans figures/) :
   1. roc_curve.pdf         — Courbe ROC avec AUROC annoté
   2. pr_curve.pdf          — Courbe Précision-Rappel avec AUPRC annoté
   3. calibration.pdf       — Diagramme de fiabilité (calibration) + ECE
-  4. abstention.pdf        — Courbe d'abstention (précision vs couverture)
+  4. abstention.pdf        — Courbe d'abstention (accuracy vs couverture)
   5. uncertainty_dist.pdf  — Distribution de l'incertitude MC Dropout
 """
 
@@ -159,53 +159,49 @@ def plot_calibration(y_true: np.ndarray, y_prob: np.ndarray,
 # ── 4. Courbe d'abstention ────────────────────────────────────────────────────
 
 def plot_abstention(y_true: np.ndarray, y_prob: np.ndarray,
-                    uncertainty: np.ndarray, n_points: int = 30,
+                    uncertainty: np.ndarray, n_points: int = 50,
                     threshold: float = 0.5) -> None:
     """
-    Courbe de précision sélective : parmi les prédictions positives (y_pred=1 au
-    seuil opérationnel), s'abstenir sur les plus incertaines — en les signalant
-    pour examen humain plutôt que de déclencher une alarme automatique — et mesurer
-    la précision sur les alertes conservées.
+    Courbe d'abstention sélective : on trie TOUTES les prédictions par
+    incertitude croissante (les plus certaines d'abord) et on mesure
+    l'accuracy en ne conservant que les k% les plus certaines.
 
-    Cela correspond au cas d'utilisation clinique : la plupart des prédictions sont non-sepsis, les
-    alertes sont rares et à forts enjeux. Nous voulons une grande précision parmi les alertes.
-
-    Forme attendue : décroissante de façon monotone de gauche (couverture élevée des alertes
-    conservées = précision de base) à droite (couverture faible = précision la plus élevée après
-    avoir écarté les alertes les plus incertaines).
+    Forme attendue : courbe verte décroissante — à faible couverture (gauche),
+    on ne garde que les prédictions dont le modèle est le plus sûr, donc
+    l'accuracy est maximale. À 100% de couverture (droite), on retrouve
+    l'accuracy de base sur tout le jeu de test.
     """
-    pos_pred = y_prob >= threshold
-    yt_pos = y_true[pos_pred].astype(float)   # 1 si vrai sepsis, 0 si FP
-    unc_pos = uncertainty[pos_pred]
-    n_pos_pred = int(pos_pred.sum())
-    baseline_prec = float(yt_pos.mean())
+    y_pred = (y_prob >= threshold).astype(int)
+    correct = (y_pred == y_true).astype(float)
+    n_total = len(y_true)
+    baseline_acc = float(correct.mean())
 
-    # Trie les alertes par incertitude (les plus certaines d'abord)
-    order = np.argsort(unc_pos)
+    # Trie par incertitude croissante (les plus certains d'abord)
+    order = np.argsort(uncertainty)
 
-    coverages, precisions = [], []
+    coverages, accuracies = [], []
     for k in np.linspace(0.05, 1.0, n_points):
-        n_keep = max(20, int(k * n_pos_pred))
+        n_keep = max(50, int(k * n_total))
         idx = order[:n_keep]
         coverages.append(k)
-        precisions.append(float(yt_pos[idx].mean()))
+        accuracies.append(float(correct[idx].mean()))
 
     coverages  = np.array(coverages)
-    precisions = np.array(precisions)
+    accuracies = np.array(accuracies)
 
     fig, ax = plt.subplots(figsize=(5, 4))
-    ax.plot(coverages * 100, precisions * 100, color=GREEN, lw=2,
+    ax.plot(coverages * 100, accuracies * 100, color=GREEN, lw=2,
             label="Diffusion-TS + MC Dropout")
-    ax.axhline(baseline_prec * 100, color=GRAY, lw=1, linestyle="--",
-               label=f"Précision sans abstention ({baseline_prec*100:.1f} %)")
+    ax.axhline(baseline_acc * 100, color=GRAY, lw=1, linestyle="--",
+               label=f"Accuracy sans abstention ({baseline_acc*100:.1f} %)")
 
-    ax.set_xlabel(f"Couverture des alertes (n = {n_pos_pred} prédictions positives)")
-    ax.set_ylabel("Précision parmi les alertes conservées (%)")
-    ax.set_title("Courbe d'abstention sur les alertes\n"
-                 "(les alertes les plus incertaines sont écartées en premier)")
-    ax.legend(loc="upper right")
+    ax.set_xlabel(f"Couverture (n = {n_total} échantillons)")
+    ax.set_ylabel("Accuracy sur les prédictions conservées (%)")
+    ax.set_title("Courbe d'abstention sélective\n"
+                 "(les prédictions les plus incertaines sont écartées en premier)")
+    ax.legend(loc="lower right")
     ax.xaxis.set_major_formatter(ticker.FormatStrFormatter("%d%%"))
-    ax.yaxis.set_major_formatter(ticker.FormatStrFormatter("%d%%"))
+    ax.yaxis.set_major_formatter(ticker.FormatStrFormatter("%.1f%%"))
 
     _save(fig, "abstention.pdf")
 
@@ -269,8 +265,6 @@ def generate_all_plots(results_dir: str = "results") -> None:
     plot_pr(y_true, mean_prob, auprc, threshold)
     plot_calibration(y_true, mean_prob, ece)
     plot_uncertainty_distribution(y_true, mean_prob, uncertainty, threshold)
-    # Note: plot_abstention() est conservée comme utilitaire mais non appelée
-    # ici. Sur ce dataset, le score MC Dropout ne discrimine pas TP/FP parmi
-    # les alertes (cf. discussion §6.3), la courbe est donc peu informative.
+    plot_abstention(y_true, mean_prob, uncertainty, threshold=threshold)
 
     logger.info(f"[Plots] All figures saved to {FIGURES_DIR.resolve()}/")

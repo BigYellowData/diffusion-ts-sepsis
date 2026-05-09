@@ -1,0 +1,230 @@
+PS C:\Users\nadir\Desktop\VsCode\GenAI> uv run main.py
+19:11:40 | INFO | main | Using GPU: NVIDIA GeForce RTX 4060 Ti
+19:11:41 | INFO | main | === STAGE: Preprocessing ===
+19:11:41 | INFO | src.data.preprocess | Loading cached preprocessed data from data\processed\splits.npz
+19:11:42 | INFO | main | === STAGE: Diffusion pre-training ===
+19:11:59 | INFO | src.training.train_diffusion | [Diffusion] Epoch 001 | loss=0.2247
+19:12:14 | INFO | src.training.train_diffusion | [Diffusion] Epoch 002 | loss=0.1713
+19:12:29 | INFO | src.training.train_diffusion | [Diffusion] Epoch 003 | loss=0.1362
+19:12:44 | INFO | src.training.train_diffusion | [Diffusion] Epoch 004 | loss=0.1266
+19:12:14 | INFO | src.training.train_diffusion | [Diffusion] Epoch 002 | loss=0.1713 
+19:12:44 | INFO | src.training.train_diffusion | [Diffusion] Epoch 004 | loss=0.1266
+19:12:58 | INFO | src.training.train_diffusion | [Diffusion] Epoch 005 | loss=0.1214
+19:13:13 | INFO | src.training.train_diffusion | [Diffusion] Epoch 006 | loss=0.1173
+19:13:28 | INFO | src.training.train_diffusion | [Diffusion] Epoch 007 | loss=0.1144
+19:13:43 | INFO | src.training.train_diffusion | [Diffusion] Epoch 008 | loss=0.1121
+19:13:58 | INFO | src.training.train_diffusion | [Diffusion] Epoch 009 | loss=0.1100
+19:14:13 | INFO | src.training.train_diffusion | [Diffusion] Epoch 010 | loss=0.1081
+19:14:28 | INFO | src.training.train_diffusion | [Diffusion] Epoch 011 | loss=0.1066
+19:14:42 | INFO | src.training.train_diffusion | [Diffusion] Epoch 012 | loss=0.1051
+19:14:57 | INFO | src.training.train_diffusion | [Diffusion] Epoch 013 | loss=0.1037
+19:15:12 | INFO | src.training.train_diffusion | [Diffusion] Epoch 014 | loss=0.1026
+19:15:27 | INFO | src.training.train_diffusion | [Diffusion] Epoch 015 | loss=0.1012
+19:15:42 | INFO | src.training.train_diffusion | [Diffusion] Epoch 016 | loss=0.0999
+19:15:57 | INFO | src.training.train_diffusion | [Diffusion] Epoch 017 | loss=0.0987
+19:16:12 | INFO | src.training.train_diffusion | [Diffusion] Epoch 018 | loss=0.0983
+19:16:27 | INFO | src.training.train_diffusion | [Diffusion] Epoch 019 | loss=0.0975
+19:16:41 | INFO | src.training.train_diffusion | [Diffusion] Epoch 020 | loss=0.0966
+19:16:56 | INFO | src.training.train_diffusion | [Diffusion] Epoch 021 | loss=0.0962
+19:17:11 | INFO | src.training.train_diffusion | [Diffusion] Epoch 022 | loss=0.0957
+19:17:26 | INFO | src.training.train_diffusion | [Diffusion] Epoch 023 | loss=0.0951
+19:17:41 | INFO | src.training.train_diffusion | [Diffusion] Epoch 024 | loss=0.0949
+19:17:56 | INFO | src.training.train_diffusion | [Diffusion] Epoch 025 | loss=0.0941
+19:18:11 | INFO | src.training.train_diffusion | [Diffusion] Epoch 026 | loss=0.0935
+19:18:26 | INFO | src.training.train_diffusion | [Diffusion] Epoch 027 | loss=0.0934
+19:18:45 | INFO | src.training.train_diffusion | [Diffusion] Epoch 028 | loss=0.0925
+19:19:03 | INFO | src.training.train_diffusion | [Diffusion] Epoch 029 | loss=0.0925
+19:19:20 | INFO | src.training.train_diffusion | [Diffusion] Epoch 030 | loss=0.0920
+19:19:38 | INFO | src.training.train_diffusion | [Diffusion] Epoch 031 | loss=0.0921
+[Diffusion] Epoch 32/100:  36%|██████████████████▏                               | 53[Diffusion] Epoch 32/100:  37%|██████████████████▌                               | 54[Diffusion] Epoch 32/100:  38%|██████████████████▊              19:19:55 | INFO | src.training.train_diffusion | [Diffusion] Epoch 032 | loss=0.0914
+19:20:12 | INFO | src.training.train_diffusion | [Diffusion] Epoch 033 | loss=0.0912
+19:20:29 | INFO | src.training.train_diffusion | [Diffusion] Epoch 034 | loss=0.0908
+19:20:45 | INFO | src.training.train_diffusion | [Diffusion] Epoch 035 | loss=0.0906         
+19:21:02 | INFO | src.training.train_diffusion | [Diffusion] Epoch 036 | loss=0.0907         
+19:21:18 | INFO | src.training.train_diffusion | [Diffusion] Epoch 037 | loss=0.0901         
+19:21:35 | INFO | src.training.train_diffusion | [Diffusion] Epoch 038 | loss=0.0896         
+19:21:51 | INFO | src.training.train_diffusion | [Diffusion] Epoch 039 | loss=0.0894         
+19:22:09 | INFO | src.training.train_diffusion | [Diffusion] Epoch 040 | loss=0.0896         
+19:22:26 | INFO | src.training.train_diffusion | [Diffusion] Epoch 041 | loss=0.0894         
+19:22:46 | INFO | src.training.train_diffusion | [Diffusion] Epoch 042 | loss=0.0886         
+19:23:04 | INFO | src.training.train_diffusion | [Diffusion] Epoch 043 | loss=0.0888         
+19:23:23 | INFO | src.training.train_diffusion | [Diffusion] Epoch 044 | loss=0.0883         
+19:23:39 | INFO | src.training.train_diffusion | [Diffusion] Epoch 045 | loss=0.0885         
+19:23:56 | INFO | src.training.train_diffusion | [Diffusion] Epoch 046 | loss=0.0881         
+19:24:11 | INFO | src.training.train_diffusion | [Diffusion] Epoch 047 | loss=0.0883         
+19:24:28 | INFO | src.training.train_diffusion | [Diffusion] Epoch 048 | loss=0.0879         
+19:24:44 | INFO | src.training.train_diffusion | [Diffusion] Epoch 049 | loss=0.0876         
+19:25:00 | INFO | src.training.train_diffusion | [Diffusion] Epoch 050 | loss=0.0880         
+19:25:16 | INFO | src.training.train_diffusion | [Diffusion] Epoch 051 | loss=0.0876         
+19:25:32 | INFO | src.training.train_diffusion | [Diffusion] Epoch 052 | loss=0.0877         
+19:25:48 | INFO | src.training.train_diffusion | [Diffusion] Epoch 053 | loss=0.0874         
+19:26:05 | INFO | src.training.train_diffusion | [Diffusion] Epoch 054 | loss=0.0871         
+19:26:20 | INFO | src.training.train_diffusion | [Diffusion] Epoch 055 | loss=0.0874         
+19:26:37 | INFO | src.training.train_diffusion | [Diffusion] Epoch 056 | loss=0.0868         
+19:26:52 | INFO | src.training.train_diffusion | [Diffusion] Epoch 057 | loss=0.0871         
+19:27:08 | INFO | src.training.train_diffusion | [Diffusion] Epoch 058 | loss=0.0867         
+19:27:25 | INFO | src.training.train_diffusion | [Diffusion] Epoch 059 | loss=0.0871         
+19:27:41 | INFO | src.training.train_diffusion | [Diffusion] Epoch 060 | loss=0.0868         
+19:27:57 | INFO | src.training.train_diffusion | [Diffusion] Epoch 061 | loss=0.0863         
+19:28:13 | INFO | src.training.train_diffusion | [Diffusion] Epoch 062 | loss=0.0862         
+19:28:29 | INFO | src.training.train_diffusion | [Diffusion] Epoch 063 | loss=0.0866         
+19:28:45 | INFO | src.training.train_diffusion | [Diffusion] Epoch 064 | loss=0.0862         
+19:29:02 | INFO | src.training.train_diffusion | [Diffusion] Epoch 065 | loss=0.0865         
+19:29:18 | INFO | src.training.train_diffusion | [Diffusion] Epoch 066 | loss=0.0863         
+19:29:34 | INFO | src.training.train_diffusion | [Diffusion] Epoch 067 | loss=0.0865         
+19:29:49 | INFO | src.training.train_diffusion | [Diffusion] Epoch 068 | loss=0.0861         
+19:30:05 | INFO | src.training.train_diffusion | [Diffusion] Epoch 069 | loss=0.0863         
+19:30:21 | INFO | src.training.train_diffusion | [Diffusion] Epoch 070 | loss=0.0854         
+19:30:37 | INFO | src.training.train_diffusion | [Diffusion] Epoch 071 | loss=0.0855         
+19:30:53 | INFO | src.training.train_diffusion | [Diffusion] Epoch 072 | loss=0.0858         
+19:31:09 | INFO | src.training.train_diffusion | [Diffusion] Epoch 073 | loss=0.0854         
+19:31:25 | INFO | src.training.train_diffusion | [Diffusion] Epoch 074 | loss=0.0855         
+19:31:41 | INFO | src.training.train_diffusion | [Diffusion] Epoch 075 | loss=0.0853         
+19:31:57 | INFO | src.training.train_diffusion | [Diffusion] Epoch 076 | loss=0.0854         
+19:32:13 | INFO | src.training.train_diffusion | [Diffusion] Epoch 077 | loss=0.0857         
+19:32:29 | INFO | src.training.train_diffusion | [Diffusion] Epoch 078 | loss=0.0859         
+19:32:46 | INFO | src.training.train_diffusion | [Diffusion] Epoch 079 | loss=0.0853         
+19:33:02 | INFO | src.training.train_diffusion | [Diffusion] Epoch 080 | loss=0.0855         
+19:33:18 | INFO | src.training.train_diffusion | [Diffusion] Epoch 081 | loss=0.0854         
+19:29:34 | INFO | src.training.train_diffusion | [Diffusion] Epoch 067 | loss=0.0865
+19:29:49 | INFO | src.training.train_diffusion | [Diffusion] Epoch 068 | loss=0.0861
+19:30:05 | INFO | src.training.train_diffusion | [Diffusion] Epoch 069 | loss=0.0863
+19:30:21 | INFO | src.training.train_diffusion | [Diffusion] Epoch 070 | loss=0.0854
+19:30:21 | INFO | src.training.train_diffusion | [Diffusion] Epoch 070 | loss=0.0854
+19:30:37 | INFO | src.training.train_diffusion | [Diffusion] Epoch 071 | loss=0.0855
+19:30:37 | INFO | src.training.train_diffusion | [Diffusion] Epoch 071 | loss=0.0855
+19:30:53 | INFO | src.training.train_diffusion | [Diffusion] Epoch 072 | loss=0.0858
+19:31:09 | INFO | src.training.train_diffusion | [Diffusion] Epoch 073 | loss=0.0854
+19:31:25 | INFO | src.training.train_diffusion | [Diffusion] Epoch 074 | loss=0.0855
+19:31:41 | INFO | src.training.train_diffusion | [Diffusion] Epoch 075 | loss=0.0853
+19:31:57 | INFO | src.training.train_diffusion | [Diffusion] Epoch 076 | loss=0.0854
+19:32:13 | INFO | src.training.train_diffusion | [Diffusion] Epoch 077 | loss=0.0857
+19:32:29 | INFO | src.training.train_diffusion | [Diffusion] Epoch 078 | loss=0.0859
+19:32:46 | INFO | src.training.train_diffusion | [Diffusion] Epoch 079 | loss=0.0853
+19:33:02 | INFO | src.training.train_diffusion | [Diffusion] Epoch 080 | loss=0.0855
+19:33:18 | INFO | src.training.train_diffusion | [Diffusion] Epoch 081 | loss=0.0854
+19:33:34 | INFO | src.training.train_diffusion | [Diffusion] Epoch 082 | loss=0.0853
+19:33:50 | INFO | src.training.train_diffusion | [Diffusion] Epoch 083 | loss=0.0854
+19:34:06 | INFO | src.training.train_diffusion | [Diffusion] Epoch 084 | loss=0.0856
+19:34:22 | INFO | src.training.train_diffusion | [Diffusion] Epoch 085 | loss=0.0857
+19:34:38 | INFO | src.training.train_diffusion | [Diffusion] Epoch 086 | loss=0.0852
+19:34:54 | INFO | src.training.train_diffusion | [Diffusion] Epoch 087 | loss=0.0853
+19:35:12 | INFO | src.training.train_diffusion | [Diffusion] Epoch 088 | loss=0.0853
+19:35:29 | INFO | src.training.train_diffusion | [Diffusion] Epoch 089 | loss=0.0856
+19:35:47 | INFO | src.training.train_diffusion | [Diffusion] Epoch 090 | loss=0.0853
+19:36:04 | INFO | src.training.train_diffusion | [Diffusion] Epoch 091 | loss=0.0853
+19:36:21 | INFO | src.training.train_diffusion | [Diffusion] Epoch 092 | loss=0.0851
+19:36:38 | INFO | src.training.train_diffusion | [Diffusion] Epoch 093 | loss=0.0851
+19:36:55 | INFO | src.training.train_diffusion | [Diffusion] Epoch 094 | loss=0.0852
+19:37:12 | INFO | src.training.train_diffusion | [Diffusion] Epoch 095 | loss=0.0852
+19:37:29 | INFO | src.training.train_diffusion | [Diffusion] Epoch 096 | loss=0.0850
+[Diffusion] Epoch 97/100:  18%|█████████████████████▌                                                                                                  | 2[Diffusion] Epoch 97/100:  19%|██[Diffusion] Epoch 97/100:  40%|███████████████████████████████████████████████▊                                                                        | 588/1474 [00:06<00:08, 98.83it/s[Diffusion] Epoch 97/100:  41%|████████████████████████████████████████████████▋                                                                [Diffusion] Epoch 97/100:  41%|█████████████████████████████████████████████[Diffusion] Epoch 97/100:  42%|██████████████████████████████████████████████████▏                                         [Diffusion] Epoch 97/100:  42%|██████████████████████████████████████████████████▉                                                             
+[Diffusion] Epoch 97/100:  43%|███████████████████████████████████████████████████▋                                                            
+[Diffusion] Epoch 97/100:  44%|████████████████████████████████████████████████████▍                                                           
+[Diffusion] Epoch 97/100:  44%|█████████████████████████████████████████████████████▏                                                          
+[Diffusion] Epoch 97/100:  45%|█████████████████████████████████████████████████████▉                                                          
+[Diffusion] Epoch 97/100:  46%|██████████████████████████████████████████████████████▋                                                         
+[Diffusion] Epoch 97/100:  46%|███████████████████████████████████████████████████████▎                                                        
+[Diffusion] Epoch 97/100:  47%|████████████████████████████████████████████████████████                                                        
+[Diffusion] Epoch 97/100:  47%|████████████████████████████████████████████████████████▋                                                       
+[Diffusion] Epoch 97/100:  48%|█████████████████████████████████████████████████████████▍                                                      
+[Diffusion] Epoch 97/100:  49%|██████████████████████████████████████████████████████████▎                                                     
+[Diffusion] Epoch 97/100:  49%|███████████████████████████████████████████████████████████                                                     
+[Diffusion] Epoch 97/100:  50%|███████████████████████████████████████████████████████████▊                                                    
+[Diffusion] Epoch 97/100:  51%|████████████████████████████████████████████████████████████▋                                                   
+[Diffusion] Epoch 97/100:  51%|█████████████████████████████████████████████████████████████▍                                                  
+[Diffusion] Epoch 97/100:  52%|██████████████████████████████████████████████████████████████▎                                                 
+[Diffusion] Epoch 97/100:  53%|███████████████████████████████████████████████████████████████                                                 
+[Diffusion] Epoch 97/100:  53%|███████████████████████████████████████████████████████████████▉                                                
+[Diffusion] Epoch 97/100:  54%|████████████████████████████████████████████████████████████████▊                                               
+[Diffusion] Epoch 97/100:  55%|█████████████████████████████████████████████████████████████████▌                                              
+[Diffusion] Epoch 97/100:  55%|██████████████████████████████████████████████████████████████████▍                                             
+[Diffusion] Epoch 97/100:  56%|███████████████████████████████████████████████████████████████████▎                                            
+[Diffusion] Epoch 97/100:  57%|████████████████████████████████████████████████████████████████████▏                                           
+[Diffusion] Epoch 97/100:  58%|█████████████████████████████████████████████████████████████████████                                           
+[Diffusion] Epoch 97/100:  58%|█████████████████████████████████████████████████████████████████████▊                                          
+[Diffusion] Epoch 97/100:  59%|██████████████████████████████████████████████████████████████████████▋                                         
+[Diffusion] Epoch 97/100:  60%|███████████████████████████████████████████████████████████████████████▌                                        
+[Diffusion] Epoch 97/100:  60%|████████████████████████████████████████████████████████████████████████▍                                       
+[Diffusion] Epoch 97/100:  61%|█████████████████████████████████████████████████████████████████████████▎                                      
+[Diffusion] Epoch 97/100:  62%|██████████████████████████████████████████████████████████████████████████▏                                     
+[Diffusion] Epoch 97/100:  62%|██████████████████████████████████████████████████████████████████████████▉                                     
+[Diffusion] Epoch 97/100:  63%|███████████████████████████████████████████████████████████████████████████▊                                    
+[Diffusion] Epoch 97/100:  64%|████████████████████████████████████████████████████████████████████████████▌                                   
+[Diffusion] Epoch 97/100:  65%|█████████████████████████████████████████████████████████████████████████████▍                                  
+[Diffusion] Epoch 97/100:  65%|██████████████████████████████████████████████████████████████████████████████▏                                 
+[Diffusion] Epoch 97/100:  66%|███████████████████████████████████████████████████████████████████████████████                                 
+[Diffusion] Epoch 97/100:  67%|███████████████████████████████████████████████████████████████████████████████▊                                
+[Diffusion] Epoch 97/100:  67%|████████████████████████████████████████████████████████████████████████████████▋                               
+[Diffusion] Epoch 97/100:  68%|████████████████████████████████████████████████████████████████████████████████▊                               
+[Diffusion] Epoch 97/100:  69%|█████████████████████████████████████████████████████████████████████████████████▌                              
+[Diffusion] Epoch 97/100:  69%|██████████████████████████████████████████████████████████████████████████████████▌                             
+[Diffusion] Epoch 97/100:  70%|███████████████████████████████████████████████████████████████████████████████████▍                            
+[Diffusion] Epoch 97/100:  71%|████████████████████████████████████████████████████████████████████████████████████▏                           
+[Diffusion] Epoch 97/100:  71%|█████████████████████████████████████████████████████████████████████████████████████                           
+[Diffusion] Epoch 97/100:  72%|█████████████████████████████████████████████████████████████████████████████████████▊                          
+[Diffusion] Epoch 97/100:  73%|██████████████████████████████████████████████████████████████████████████████████████▋                         
+[Diffusion] Epoch 97/100:  73%|███████████████████████████████████████████████████████████████████████████████████████▎                        
+[Diffusion] Epoch 97/100:  74%|████████████████████████████████████████████████████████████████████████████████████████▏                       
+[Diffusion] Epoch 97/100:  75%|█████████████████████████████████████████████████████████████████████████████████████████▏                      
+[Diffusion] Epoch 97/100:  76%|█████████████████████████████████████████████████████████████████████████████████████████▉                      
+[Diffusion] Epoch 97/100:  76%|██████████████████████████████████████████████████████████████████████████████████████████▋                     
+[Diffusion] Epoch 97/100:  77%|███████████████████████████████████████████████████████████████████████████████████████████▌                    
+[Diffusion] Epoch 97/100:  78%|████████████████████████████████████████████████████████████████████████████████████████████▎                   
+[Diffusion] Epoch 97/100:  78%|█████████████████████████████████████████████████████████████████████████████████████████████▏                  
+[Diffusion] Epoch 97/100:  82%|██████████████████████████████████████████████████████████████████████████████████████████████████              [Diffusion] Epoch 97/100:  83%|██████████████████████████████████████████████████████████████████████████████████████████████████▊             [Diffusion] Epoch 97/100:  84%|███████████████████████████████████████████████████████████████████████████████████████████████████▌            [Diffusion] Epoch 97/100:  84%|████████████████████████████████████████████████████████████████████████████████████████████████████▍           [Diffusion] Epoch 97/100:  85%|█████████████████████████████████████████████████████████████████████████████████████████████████████▏          [Diffusion] Epoch 97/100:  86%|██████████████████████████████████████████████████████████████████████████████████████████████████████          [Diffusion] Epoch 97/100:  86%|██████████████████████████████████████████████████████████████████████████████████████████████████████▊         [Diffusion] Epoch 97/100:  87%|███████████████████████████████████████████████████████████████████████████████████████████████████████▋        [Diffusion] Epoch 97/100:  88%|████████████████████████████████████████████████████████████████████████████████████████████████████████▍       [Diffusion] Epoch███████████████████       [Diffusion] Epoch 97/100:  89%|█████████████████████████████████████████████████████████████████████████████████████████████████████████▊      [Diffusion] Epoch 97/100:  90%|██████████████████████████████████████████████████████████████████████████████████████████████████████████▌     [Diffusion] Epoch 97/100:  90%|███████████████████████████████████████████████████████████████████████████████████████████████████████████▎    [Diffusion] Epoch 97/100:  91%|████████████████████████████████████████████████████████████████████████████████████████████████████████████    [Diffusion] Epoch 97/100:  92%|████████████████████████████████████████████████████████████████████████████████████████████████████████████▉   [Diffusion] Epoch 97/100:  92%|█████████████████████████████████████████████████████████████████████████████████████████████████████████████▋  [Diffusion] Epoch 97/100:  93%|██████████████████████████████████████████████████████████████████████████████████████████████████████████████▎ [Diffusion] Epoch 97/100:  93%|███████████████████████████████████████████████████████████████████████████████████████████████████████████████ [Diffusion] Epoch 97/100:  94%|███████████████████████████████████████████████████████████████████████████████████████████████████████████████▊[Diffusion] Epoch 97/100:  95%|████████████████████████████████████████████████████████████████████████████████████████████████████████████████[Diffusion] Epoch 97/100:  95%|████████████████████████████████████████████████████████████████████████████████████████████████████████████████[Diffusion] Epoch 97/100:  96%|████████████████████████████████████████████████████████████████████████████████████████████████████████████████[Diffusion] Epoch 97/100:  97%|████████████████████████████████████████████████████████████████████████████████████████████████████████████████[Diffusion] Epoch 97/100:  97%|████████████████████████████████████████████████████████████████████████████████████████████████████████████████[Diffusion] Epoch 97/100:  98%|████████████████████████████████████████████████████████████████████████████████████████████████████████████████[Diffusion] Epoch 97/100:  99%|████████████████████████████████████████████████████████████████████████████████████████████████████████████████[Diffusion] Epoch 97/100:  99%|████████████████████████████████████████████████████████████████████████████████████████████████████████████████                                                                                                                                               19:37:46 | INFO | src.training.train_diffusion | [Diffusion] Epoch 097 | loss=0.0856
+19:38:02 | INFO | src.training.train_diffusion | [Diffusion] Epoch 098 | loss=0.0848
+19:38:18 | INFO | src.training.train_diffusion | [Diffusion] Epoch 099 | loss=0.0849
+19:38:35 | INFO | src.training.train_diffusion | [Diffusion] Epoch 100 | loss=0.0851
+19:38:35 | INFO | src.training.train_diffusion | [Diffusion] Training done. Best loss=0.0848
+19:38:35 | INFO | main | === STAGE: Classifier training ===
+19:38:35 | INFO | main | Loading diffusion checkpoint from 'checkpoints\diffusion_best.pt'
+19:38:35 | INFO | src.training.train_classifier | [Augment] Generating 6450 synthetic sepsis samples…
+19:38:45 | INFO | src.training.train_classifier | [Augment] Combined dataset size: 98849
+19:39:01 | INFO | src.training.train_classifier | [Classifier] Epoch 001 | loss=0.0414 | AUROC=0.7973 | AUPRC=0.0906 | F1=0.1011
+19:39:15 | INFO | src.training.train_classifier | [Classifier] Epoch 002 | loss=0.0263 | AUROC=0.7999 | AUPRC=0.0919 | F1=0.1067
+19:39:30 | INFO | src.training.train_classifier | [Classifier] Epoch 003 | loss=0.0257 | AUROC=0.7940 | AUPRC=0.0929 | F1=0.1343
+19:39:43 | INFO | src.training.train_classifier | [Classifier] Epoch 004 | loss=0.0253 | AUROC=0.7872 | AUPRC=0.1025 | F1=0.1236
+19:39:57 | INFO | src.training.train_classifier | [Classifier] Epoch 005 | loss=0.0247 | AUROC=0.8006 | AUPRC=0.1115 | F1=0.1202
+[Classifier] Epoch 6/50:  47%|███████████████████████████████████████████████████████▎                                                             | 730/1544 [00:0[Classifier] Epoch 6/50:  48%|████████████████████████████████████████████████████████▏                                                            | 741/1544 [00:0[Classifier] Epoch 6/50:  49%|████████████████████████████████████████████████████████▌                                                           | 753/1544 [00:07[Classifier] Epoch 6/50:  50%|█████████████████████████████████████████████████████████▍                                                          | 765/1544 [00:07[Classifier] Epoch 6/50:  50%|██████████████████████████████████████████████████████████▍                                                         | 777/1544 [00:07[Classifier] Epoch 6/50:  51%|███████████████████████████████████████████████████████████▎                                                        | 789/1544 [00:07[Classifier] Epoch 6/50:  52%|████████████████████████████████████████████████████████████▏                                                       | 801/1544 [00:07[Classifier] Epoch 6/50:  53%|█████████████████████████████████████████████████████████████                                                       | 813/1544 [00:07[Classifier] Epoch 6/50:  53%|█████████████████████████████████████████████████████████████▉                                                      | 825/1544 [00:07[Classifier] Epoch 6/50:  54%|██████████████████████████████████████████████████████████████▉                                                     | 838/1544 [00:07[Classifier] Epoch 6/50:  55%|███████████████████████████████████████████████████████████████▉                                                    | 851/1544 [00:07[Classifier] Epoch 6/50:  56%|████████████████████████████████████████████████████████████████▉                                                   | 864/1544 [00:08[Classifier] Epoch 6/50:  57%|█████████████████████████████████████████████████████████████████▊                                                  | 876/1544 [00:08[Classifier] Epoch 6/50:  58%|██████████████████████████████████████████████████████████████████▊                                                 | 889/1544 [00:08[Classifier] Epoch 6/50:  58%|███████████████████████████████████████████████████████████████████▊                                                | 902/1544 [00:08[Classifier] Epoch 6/50:  59%|████████████████████████████████████████████████████████████████████▋                                               | 915/1544 [00:08[Classifier] Epoch 6/50:  60%|█████████████████████████████████████████████████████████████████████▋                                              | 928/1544 [00:08[Classifier] Epoch 6/50:  61%|██████████████████████████████████████████████████████████████████████▋                                             | 941/1544 [00:08[Classifier] Epoch 6/50:  62%|███████████████████████████████████████████████████████████████████████▋                                            | 954/1544 [00:08[Classifier] Epoch 6/50:  63%|████████████████████████████████████████████████████████████████████████▋                                           | 967/1544 [00:08[Classifier] Epoch 6/50:  64%|█████████████████████████████████████████████████████████████████████████▋                                          | 981/1544 [00:08[Classifier] Epoch 6/50:  64%|██████████████████████████████████████████████████████████████████████████▋                                         | 994/1544 [00:09[Classifier] Epoch 6/50:  65%|███████████████████████████████████████████████████████████████████████████                                        | 1007/1544 [00:09[Classifier] Epoch 6/50:  66%|███████████████████████████████████████████████████████████████████████████▉                                       | 1020/1544 [00:09[Classifier] Epoch 6/50:  67%|████████████████████████████████████████████████████████████████████████████▉                                      | 1033/1544 [00:09[Classifier] Epoch 6/50:  68%|█████████████████████████████████████████████████████████████████████████████▉                                     | 1046/1544 [00:09[Classifier] Epoch 6/50:  69%|██████████████████████████████████████████████████████████████████████████████▉                                    | 1059/1544 [00:09[Classifier] Epoch 6/50:  69%|███████████████████████████████████████████████████████████████████████████████▉                                   | 1073/1544 [00:09[Classifier] Epoch 6/50:  70%|████████████████████████████████████████████████████████████████████████████████▉                                  | 1086/1544 [00:09[Classifier] Epoch 6/50:  71%|█████████████████████████████████████████████████████████████████████████████████▉                                 | 1100/1544 [00:09[Classifier] Epoch 6/50:  72%|██████████████████████████████████████████████████████████████████████████████████▉                                | 1113/1544 [00:09[Classifier] Epoch 6/50:  73%|███████████████████████████████████████████████████████████████████████████████████▊                               | 1126/1544 [00:10[Classifier] Epoch 6/50:  74%|████████████████████████████████████████████████████████████████████████████████████▊                              | 1139/1544 [00:10[Classifier] Epoch 6/50:  75%|█████████████████████████████████████████████████████████████████████████████████████▊                             | 1152/1544 [00:10[Classifier] Epoch 6/50:  75%|██████████████████████████████████████████████████████████████████████████████████████▊                            | 1165/1544 [00:10[Classifier] Epoch 6/50:  76%|███████████████████████████████████████████████████████████████████████████████████████▊                           | 1179/1544 [00:10[Classifier] Epoch 6/50:  77%|████████████████████████████████████████████████████████████████████████████████████████▊                          | 1192/1544 [00:10[Classifier] Epoch 6/50:  78%|█████████████████████████████████████████████████████████████████████████████████████████▊                         | 1205/1544 [00:10[Classifier] Epoch 6/50:  79%|██████████████████████████████████████████████████████████████████████████████████████████▋                        | 1218/1544 [00:10[Classifier] Epoch 6/50:  80%|███████████████████████████████████████████████████████████████████████████████████████████▋                       | 1231/1544 [00:10[Classifier] Epoch 6/50:  81%|████████████████████████████████████████████████████████████████████████████████████████████▋                      | 1244/1544 [00:11[Classifier] Epoch 6/50:  81%|█████████████████████████████████████████████████████████████████████████████████████████████▌                     | 1257/1544 [00:11[Classifier] Epoch 6/50:  82%|██████████████████████████████████████████████████████████████████████████████████████████████▌                    | 1270/1544 [00:11[Classifier] Epoch 6/50:  83%|███████████████████████████████████████████████████████████████████████████████████████████████▌                   | 1283/1544 [00:11[Classifier] Epoch 6/50:  84%|████████████████████████████████████████████████████████████████████████████████████████████████▌                  | 1297/1544 [00:11[Classifier] Epoch 6/50:  85%|█████████████████████████████████████████████████████████████████████████████████████████████████▌                 | 1310/1544 [00:11[Classifier] Epoch 6/50:  86%|██████████████████████████████████████████████████████████████████████████████████████████████████▌                | 1324/1544 [00:11[Classifier] Epoch 6/50:  87%|███████████████████████████████████████████████████████████████████████████████████████████████████▌               | 1337/1544 [00:11[Classifier] Epoch 6/50:  88%|████████████████████████████████████████████████████████████████████████████████████████████████████▋              | 1351/1544 [00:11[Classifier] Epoch 6/50:  88%|█████████████████████████████████████████████████████████████████████████████████████████████████████▌             | 1364/1544 [00:11[Classifier] Epoch 6/50:  89%|██████████████████████████████████████████████████████████████████████████████████████████████████████▌            | 1377/1544 [00:12[Classifier] Epoch 6/50:  90%|███████████████████████████████████████████████████████████████████████████████████████████████████████▌           | 1390/1544 [00:12[Classifier] Epoch 6/50:  91%|████████████████████████████████████████████████████████████████████████████████████████████████████████▌          | 1404/1544 [00:12[Classifier] Epoch 6/50:  92%|█████████████████████████████████████████████████████████████████████████████████████████████████████████▌         | 1417/1544 [00:12[Classifier] Epoch 6/50:  93%|██████████████████████████████████████████████████████████████████████████████████████████████████████████▌        | 1430/1544 [00:12[Classifier] Epoch 6/50:  93%|███████████████████████████████████████████████████████████████████████████████████████████████████████████▍       | 1443/1544 [00:12[Classifier] Epoch 6/50:  94%|████████████████████████████████████████████████████████████████████████████████████████████████████████████▍      | 1456/1544 [00:12[Classifier] Epoch 6/50:  95%|█████████████████████████████████████████████████████████████████████████████████████████████████████████████▍     | 1469/1544 [00:12[Classifier] Epoch 6/50:  96%|██████████████████████████████████████████████████████████████████████████████████████████████████████████████▍    | 1482/1544 [00:12[Classifier] Epoch 6/50:  97%|███████████████████████████████████████████████████████████████████████████████████████████████████████████████▎   | 1495/1544 [00:13[Classifier] Epoch 6/50:  98%|████████████████████████████████████████████████████████████████████████████████████████████████████████████████▎  | 1508/1544 [00:13[Classifier] Epoch 6/50:  99%|█████████████████████████████████████████████████████████████████████████████████████████████████████████████████▎ | 1521/1544 [00:13[Classifier] Epoch 6/50:  99%|██████████████████████████████████████████████████████████████████████████████████████████████████████████████████▎| 1534/1544 [00:13                                                                                                                                                                   
+19:40:11 | INFO | src.training.train_classifier | [Classifier] Epoch 006 | loss=0.0245 | AUROC=0.7897 | AUPRC=0.0894 | F1=0.1087
+19:40:24 | INFO | src.training.train_classifier | [Classifier] Epoch 007 | loss=0.0245 | AUROC=0.8071 | AUPRC=0.0960 | F1=0.1136
+19:40:38 | INFO | src.training.train_classifier | [Classifier] Epoch 008 | loss=0.0239 | AUROC=0.7762 | AUPRC=0.0916 | F1=0.1129
+19:40:52 | INFO | src.training.train_classifier | [Classifier] Epoch 009 | loss=0.0233 | AUROC=0.7919 | AUPRC=0.0847 | F1=0.1125
+19:41:06 | INFO | src.training.train_classifier | [Classifier] Epoch 010 | loss=0.0225 | AUROC=0.7949 | AUPRC=0.1004 | F1=0.1070
+19:41:20 | INFO | src.training.train_classifier | [Classifier] Epoch 011 | loss=0.0221 | AUROC=0.7922 | AUPRC=0.0931 | F1=0.1105
+19:41:35 | INFO | src.training.train_classifier | [Classifier] Epoch 012 | loss=0.0214 | AUROC=0.7807 | AUPRC=0.0956 | F1=0.1220
+19:41:49 | INFO | src.training.train_classifier | [Classifier] Epoch 013 | loss=0.0206 | AUROC=0.7854 | AUPRC=0.0902 | F1=0.1260
+19:42:03 | INFO | src.training.train_classifier | [Classifier] Epoch 014 | loss=0.0193 | AUROC=0.7809 | AUPRC=0.0977 | F1=0.1451
+19:42:18 | INFO | src.training.train_classifier | [Classifier] Epoch 015 | loss=0.0189 | AUROC=0.7650 | AUPRC=0.0926 | F1=0.1262
+19:42:33 | INFO | src.training.train_classifier | [Classifier] Epoch 016 | loss=0.0172 | AUROC=0.7792 | AUPRC=0.0934 | F1=0.0942
+19:42:47 | INFO | src.training.train_classifier | [Classifier] Epoch 017 | loss=0.0174 | AUROC=0.7637 | AUPRC=0.1056 | F1=0.1125
+19:42:47 | INFO | src.training.train_classifier | [Classifier] Early stopping at epoch 17 (no improvement for 10 epochs)
+19:42:47 | INFO | src.training.train_classifier | [Classifier] Training done. Best AUROC=0.8071
+19:42:47 | INFO | main | === STAGE: Evaluation with MC Dropout ===
+19:42:56 | INFO | src.utils.uncertainty | [MC Dropout] Optimal threshold from val set: 0.0020
+19:43:09 | INFO | src.utils.uncertainty | [MC Dropout] AUROC=0.8198 | AUPRC=0.1069 | ECE=0.0180 | Utility=-0.2445
+19:43:09 | INFO | src.utils.uncertainty | Uncertainty–error correlation: 0.296 | Unc(correct)=0.0000, Unc(incorrect)=0.0000
+19:43:09 | INFO | src.utils.uncertainty | Results saved to 'results/'
+
+==================================================
+RÉSULTATS SUR L'ENSEMBLE DE TEST
+==================================================
+  Seuil          : 0.0020  (Youden, calibré sur val)
+  AUROC          : 0.8198
+  AUPRC          : 0.1069
+  F1             : 0.0995
+  Brier          : 0.0213
+  Util PhysioNet : -0.2445
+  ECE            : 0.0180
+  AUAC           : 0.0000
+  Corr Incert-Err: 0.296
+==================================================
+19:43:09 | INFO | main | === STAGE: Generating figures ===
+19:43:09 | INFO | src.utils.plots | [Plots] Generating figures for 18,807 samples (pos=410, threshold=0.0020)
+19:43:10 | INFO | src.utils.plots | [Plots] Saved figures\roc_curve.pdf
+19:43:10 | INFO | src.utils.plots | [Plots] Saved figures\pr_curve.pdf
+19:43:10 | INFO | src.utils.plots | [Plots] Saved figures\calibration.pdf
+19:43:10 | INFO | src.utils.plots | [Plots] Saved figures\uncertainty_dist.pdf
+19:43:10 | INFO | src.utils.plots | [Plots] All figures saved to C:\Users\nadir\Desktop\VsCode\GenAI\figures/
+PS C:\Users\nadir\Desktop\VsCode\GenAI>

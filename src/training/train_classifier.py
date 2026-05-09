@@ -56,9 +56,10 @@ def augment_with_diffusion(
     Génère des échantillons synthétiques de sepsis et retourne un DataLoader augmenté.
     """
     gen_cfg = cfg["generation"]
-    # Compte les vrais positifs directement depuis le jeu de données (et non l'échantillonneur)
-    n_real_pos = int(train_loader.dataset.y.sum().item())
-    n_synthetic = int(n_real_pos * gen_cfg["n_synthetic_per_real"])
+    # Compte les vrais positifs labellés et divise par le ratio pour retrouver le volume original
+    n_pos_labelled = int(train_loader.dataset.y.sum().item())
+    label_ratio = cfg["data"].get("label_ratio", 0.10)
+    n_synthetic = int((n_pos_labelled / label_ratio) * gen_cfg["n_synthetic_per_real"])
     logger.info(f"[Augment] Generating {n_synthetic} synthetic sepsis samples…")
 
     diffusion_model.eval()
