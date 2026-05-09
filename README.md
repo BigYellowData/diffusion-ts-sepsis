@@ -50,11 +50,11 @@ Et la distribution marginale des 200 échantillons synthétiques recouvre largem
 | Méthode | Type | AUROC | AUPRC | F1 | Util | ECE |
 |---|---|---|---|---|---|---|
 | XGBoost (labellé seulement) | Supervisé | 0.7835 | 0.0997 | 0.1156 | −0.468 | 0.020 |
-| BiLSTM (labellé seulement) | Supervisé | 0.8410 | 0.1086 | 0.1252 | −0.165 | 0.029 |
+| BiLSTM (labellé seulement) | Supervisé | **0.8410** | **0.1086** | 0.1252 | **−0.165** | 0.029 |
 | Transformer (sans augmentation) | Diffusion (sans semi-sup.) | 0.7892 | 0.0801 | 0.1092 | −0.472 | 0.016 |
-| TimeGAN (semi-sup.) | GAN-based | 0.8363 | 0.0993 | **0.1269** | −0.229 | 0.014 |
+| TimeGAN (semi-sup.) | GAN-based | 0.8363 | 0.0993 | **0.1269** | −0.229 | **0.014** |
 | Path Signatures + XGBoost† | Challenge winner | 0.7962 | 0.1009 | 0.1085 | — | — |
-| **Diffusion-TS + Aug + MC Dropout ★** | **Ours (semi-sup.)** | **0.8679** | **0.1363** | 0.1139 | **−0.080** | **0.009** |
+| **Diffusion-TS + Aug + MC Dropout ★** | **Ours (semi-sup.)** | 0.8198 | 0.1069 | 0.0995 | −0.244 | 0.018 |
 
 † Morrill et al. (2020) — 1er PhysioNet/CinC 2019
 

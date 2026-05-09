@@ -69,16 +69,28 @@ def build_dataloaders(splits: dict, cfg: dict) -> dict:
     L'entraînement utilise un WeightedRandomSampler pour gérer le déséquilibre des classes.
     """
     train_split = splits["train"]
+    
+    # --- CORRECTION DATA LEAKAGE ---
+    # On exclut les positifs dont l'étiquette est cachée pour le classifieur
+    if "labelled_mask" in train_split:
+        keep = train_split["labelled_mask"] | (train_split["y"] == 0)
+        X_tr = train_split["X"][keep]
+        M_tr = train_split["M"][keep]
+        y_tr = train_split["y"][keep]
+        l_mask = train_split["labelled_mask"][keep]
+    else:
+        X_tr, M_tr, y_tr, l_mask = train_split["X"], train_split["M"], train_split["y"], None
+
     train_ds = SepsisDataset(
-        train_split["X"],
-        train_split["M"],
-        train_split["y"],
-        labelled_mask=train_split.get("labelled_mask"),
+        X_tr,
+        M_tr,
+        y_tr,
+        labelled_mask=l_mask,
     )
     val_ds = SepsisDataset(splits["val"]["X"], splits["val"]["M"], splits["val"]["y"])
     test_ds = SepsisDataset(splits["test"]["X"], splits["test"]["M"], splits["test"]["y"])
 
-    sampler = make_weighted_sampler(train_split["y"])
+    sampler = make_weighted_sampler(y_tr)
     batch = cfg["training"]["classifier_batch_size"]
 
     loaders = {
@@ -118,6 +130,7 @@ def build_diffusion_loader(splits: dict, cfg: dict) -> DataLoader:
         train_split["X"],
         train_split["M"],
         train_split["y"],
+        labelled_mask=train_split.get("labelled_mask"),
     )
     return DataLoader(
         ds,

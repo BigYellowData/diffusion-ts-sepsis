@@ -224,6 +224,14 @@ def main():
     if args.stage in ("diffusion", "classifier", "evaluate", "compare", "all"):
         if data is None:
             data = stage_preprocess(cfg)   # charge depuis le cache si disponible
+            
+        if args.label_ratio is not None:
+            from src.data.preprocess import subsample_labels
+            data["splits"]["train"]["labelled_mask"] = subsample_labels(
+                data["splits"]["train"]["y"],
+                label_ratio=args.label_ratio,
+                seed=cfg.get("data", {}).get("seed", 42),
+            )
 
     if args.stage in ("diffusion", "all"):
         stage_diffusion(cfg, data, device)
