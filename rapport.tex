@@ -491,10 +491,13 @@ Seuil optimal (Youden, val set)  & 0.0020 \\
     \caption{Variance MC Dropout : erreurs vs corrects (ratio = $\times$10.5)}
 \end{subfigure}
 \caption{Qualité de calibration et corrélation incertitude--erreur.
-\textbf{Gauche :} le modèle est bien calibré (la courbe orange suit la diagonale).
-La distribution des probabilités prédites pour les cas sepsis présente une queue
-qui s'étend jusqu'à 0.4, contrairement aux non-sepsis qui restent fortement
-concentrés sous 0.05. \textbf{Droite :} la variance MC Dropout des prédictions
+\textbf{Gauche :} ECE = 0.018 indique une bonne calibration en valeur absolue,
+même si la majorité des prédictions sont concentrées dans le premier bin
+(0--0.1) du fait du déséquilibre extrême (2.3~\% de positifs au test) qui
+pousse le modèle à émettre de très faibles probabilités. La distribution des
+probabilités prédites pour les cas sepsis présente une queue qui s'étend jusqu'à
+environ 0.10, contrairement aux non-sepsis qui restent fortement concentrés
+sous 0.005. \textbf{Droite :} la variance MC Dropout des prédictions
 incorrectes est 10.5$\times$ supérieure à celle des prédictions correctes,
 validant l'utilité du score d'incertitude pour identifier les cas où le modèle
 hésite.}
