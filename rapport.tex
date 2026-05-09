@@ -491,11 +491,13 @@ Seuil optimal (Youden, val set)  & 0.0178 \\
     \caption{Variance MC Dropout : erreurs vs corrects (ratio = $\times$12.8)}
 \end{subfigure}
 \caption{Qualité de calibration et corrélation incertitude--erreur.
-\textbf{Gauche :} le modèle est bien calibré (la courbe orange suit la diagonale),
-et les probabilités prédites pour les cas sepsis se concentrent au-dessus de 0.1,
-distinctes des non-sepsis ($<$0.05). \textbf{Droite :} la variance MC Dropout
-des prédictions incorrectes est 12.8$\times$ supérieure à celle des prédictions
-correctes, validant l'utilité clinique du score d'incertitude.}
+\textbf{Gauche :} le modèle est bien calibré (la courbe orange suit la diagonale).
+La distribution des probabilités prédites pour les cas sepsis présente une queue
+qui s'étend jusqu'à 0.4, contrairement aux non-sepsis qui restent fortement
+concentrés sous 0.05. \textbf{Droite :} la variance MC Dropout des prédictions
+incorrectes est 12.8$\times$ supérieure à celle des prédictions correctes,
+validant l'utilité du score d'incertitude pour identifier les cas où le modèle
+hésite.}
 \end{figure}
 
 \subsection{Visualisation des trajectoires synthétiques}
@@ -565,7 +567,7 @@ Les unités : HR en battements/min, MAP et SBP en mmHg, Temp en °C, Lactate en 
 \midrule
 TP confiant      & 79--100  & 37.1--38.0 & 67--109 & non mesuré & sepsis & 0.419 & 1.07  & SEPSIS \checkmark \\
 TN confiant      & 52--100  & 36.1--36.7 & 73--96  & non mesuré & sain   & 0.002 & 0.001 & non-sepsis \checkmark \\
-\rowcolor{bestrow}
+\rowcolor{blockorange}
 \textbf{FP incertain} & 86--\textbf{135} & 36.6--37.7 & 92$\to$\textbf{69} & non mesuré & sain & 0.728 & \textbf{19.5} & SEPSIS $\times$ \\
 FN silencieux    & 62--86   & \textbf{35.0}--36.6 & 80--148 & 0.9--1.3   & sepsis & 0.013 & 0.12  & non-sepsis $\times$ \\
 \bottomrule
@@ -707,19 +709,35 @@ de coût clinique : pénalité FN = $-2.0$, pénalité FP = $-0.05$.
 \section{Conclusion}
 
 Ce projet démontre la faisabilité de l'adaptation de Diffusion-TS à la prédiction
-précoce du sepsis dans un cadre semi-supervisé avec incertitude bayésienne.
-Les trois contributions sont validées expérimentalement :
+précoce du sepsis dans un cadre semi-supervisé avec incertitude bayésienne. Les
+trois contributions annoncées en introduction sont validées expérimentalement :
 
 \begin{enumerate}
-    \item \textbf{L'augmentation par diffusion améliore significativement la classification}
-    (+7.9 pts AUROC vs Transformer vanilla, +2.7 pts vs BiLSTM supervisé).
-    \item \textbf{Le MC Dropout produit des scores d'incertitude utiles} : variance
-    12.8$\times$ plus élevée sur les erreurs, ECE = 0.009.
-    \item \textbf{La diffusion surpasse l'approche GAN sur cette tâche} : AUROC 0.868
-    contre 0.836 pour TimeGAN (semi-supervisé) à protocole identique, et la qualité
-    visuelle et statistique des trajectoires synthétiques (figures~\ref{fig:traj}
-    et~\ref{fig:dist}) confirme que les samples reproduisent les distributions
-    cliniques attendues.
+    \item \textbf{Première application de Diffusion-TS au domaine clinique et à
+    une tâche de classification.} Le modèle, initialement conçu pour la génération
+    de séries temporelles génériques (financières, énergétiques, physiques), est
+    transposé avec succès aux trajectoires d'unité de soins intensifs. Notre pipeline
+    atteint AUROC = 0.868 et AUPRC = 0.136 sur le test set, surpassant cinq baselines
+    dont l'approche signature gagnante du PhysioNet Challenge 2019.
+
+    \item \textbf{La génération conditionnelle semi-supervisée fonctionne.} En
+    entraînant la diffusion sur l'intégralité du dataset (labellé + non labellé)
+    avec \emph{classifier-free guidance}, on produit des trajectoires synthétiques
+    dont la qualité est validée visuellement et statistiquement
+    (figures~\ref{fig:traj} et~\ref{fig:dist}). Gain de classification mesuré :
+    \textbf{+7.9 pts AUROC} vs Transformer vanilla (preuve directe de l'apport
+    de l'augmentation) et \textbf{+2.7 pts} vs BiLSTM supervisé. À protocole
+    identique, la diffusion surpasse également l'approche GAN (0.868 vs 0.836
+    pour TimeGAN), ce qui justifie le choix architectural fait à la suite de
+    Hirnschall.
+
+    \item \textbf{La quantification d'incertitude par MC Dropout est exploitable.}
+    La variance des 50 passes stochastiques est \textbf{×12.8 plus élevée} sur les
+    prédictions incorrectes que sur les correctes (Pearson $r = 0.43$), avec un
+    ECE de \textbf{0.009} qui place le modèle parmi les mieux calibrés de la
+    comparaison. Le cas qualitatif \emph{FP incertain} (table~\ref{tab:cases})
+    illustre concrètement comment cette incertitude distingue une alerte fiable
+    d'une alerte à vérifier par un clinicien.
 \end{enumerate}
 
 Code source, tests (76 tests, 100~\% de réussite) et instructions de reproduction :
