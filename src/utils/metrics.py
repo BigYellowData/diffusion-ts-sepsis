@@ -36,7 +36,7 @@ def compute_metrics(
     threshold: float | None = None,
 ) -> dict:
     """
-    Compute AUROC, AUPRC, F1, Brier score.
+    Compute AUROC, AUPRC, F1, Brier score, ECE, PhysioNet utility.
     If threshold is None, the optimal Youden threshold is used automatically.
     """
     if threshold is None:
@@ -47,6 +47,8 @@ def compute_metrics(
         "auprc": average_precision_score(y_true, y_prob),
         "f1": f1_score(y_true, y_pred, zero_division=0),
         "brier": brier_score_loss(y_true, y_prob),
+        "ece": expected_calibration_error(y_true, y_prob),
+        "physionet_utility": physionet_utility_score(y_true, y_pred),
         "threshold": threshold,
     }
 
@@ -166,12 +168,7 @@ def full_evaluation(
     threshold: float | None = None,
 ) -> dict:
     """Run all metrics and return a summary dict."""
-    if threshold is None:
-        threshold = optimal_threshold(y_true, y_prob)
-    y_pred = (y_prob >= threshold).astype(int)
     results = compute_metrics(y_true, y_prob, threshold)
-    results["physionet_utility"] = physionet_utility_score(y_true, y_pred)
-    results["ece"] = expected_calibration_error(y_true, y_prob)
 
     if uncertainty is not None:
         cov, prec = abstention_curve(y_true, y_prob, uncertainty)

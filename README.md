@@ -11,14 +11,14 @@ Trois contributions principales :
 
 ## Résultats (test set, 10% de labels)
 
-| Méthode | Type | AUROC | AUPRC | F1 | ECE |
-|---|---|---|---|---|---|
-| XGBoost (labellé seulement) | Supervisé | 0.7835 | 0.0997 | 0.1156 | — |
-| BiLSTM (labellé seulement) | Supervisé | 0.8359 | 0.1065 | 0.1218 | — |
-| Transformer (sans augmentation) | Diffusion (sans semi-sup.) | 0.7887 | 0.0828 | 0.1203 | — |
-| TimeGAN (semi-sup.) | GAN-based | 0.8295 | 0.0950 | 0.1287 | — |
-| Path Signatures + XGBoost† | Challenge winner | 0.7962 | 0.1009 | 0.1085 | — |
-| **Diffusion-TS + Aug + MC Dropout ★** | **Ours (semi-sup.)** | **0.8679** | **0.1363** | 0.1139 | **0.009** |
+| Méthode | Type | AUROC | AUPRC | F1 | Util | ECE |
+|---|---|---|---|---|---|---|
+| XGBoost (labellé seulement) | Supervisé | 0.7835 | 0.0997 | 0.1156 | −0.468 | 0.020 |
+| BiLSTM (labellé seulement) | Supervisé | 0.8410 | 0.1086 | 0.1252 | −0.165 | 0.029 |
+| Transformer (sans augmentation) | Diffusion (sans semi-sup.) | 0.7892 | 0.0801 | 0.1092 | −0.472 | 0.016 |
+| TimeGAN (semi-sup.) | GAN-based | 0.8363 | 0.0993 | 0.1269 | −0.229 | 0.014 |
+| Path Signatures + XGBoost† | Challenge winner | 0.7962 | 0.1009 | 0.1085 | — | — |
+| **Diffusion-TS + Aug + MC Dropout ★** | **Ours (semi-sup.)** | **0.8679** | **0.1363** | 0.1139 | **−0.080** | **0.009** |
 
 † Morrill et al. (2020) — 1er PhysioNet/CinC 2019
 

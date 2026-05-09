@@ -73,9 +73,21 @@ def run_comparison(splits: dict, cfg: dict, device: torch.device) -> None:
     # ── Baseline 5: Path Signatures ───────────────────────────────────────────
     logger.info("=" * 60)
     logger.info("BASELINE 5: Path Signatures + XGBoost (Morrill et al., 2020)")
-    sig = train_signature(splits, cfg, depth=2)
-    rows.append({"method": "Path Signatures + XGBoost", "type": "Challenge winner",
-                 **_fmt(sig["test"])})
+    try:
+        sig = train_signature(splits, cfg, depth=2)
+        rows.append({"method": "Path Signatures + XGBoost", "type": "Challenge winner",
+                     **_fmt(sig["test"])})
+    except ImportError as e:
+        logger.warning(f"Path Signatures baseline skipped: {e}")
+        rows.append({
+            "method":  "Path Signatures + XGBoost",
+            "type":    "Challenge winner (skipped)",
+            "auroc":   float("nan"),
+            "auprc":   float("nan"),
+            "f1":      float("nan"),
+            "utility": float("nan"),
+            "ece":     float("nan"),
+        })
 
     # ── Notre méthode ─────────────────────────────────────────────────────────
     our = _load_our_results()
@@ -101,8 +113,8 @@ def _fmt(metrics: dict) -> dict:
         "auroc":   metrics["auroc"],
         "auprc":   metrics["auprc"],
         "f1":      metrics["f1"],
-        "utility": float("nan"),
-        "ece":     float("nan"),
+        "utility": metrics.get("physionet_utility", float("nan")),
+        "ece":     metrics.get("ece", float("nan")),
     }
 
 
@@ -120,9 +132,9 @@ def _print_table(rows: list[dict]) -> None:
         vals = [
             r["method"] + marker,
             r["type"],
-            f"{r['auroc']:.4f}",
-            f"{r['auprc']:.4f}",
-            f"{r['f1']:.4f}",
+            f"{r['auroc']:.4f}"   if not _isnan(r["auroc"])   else "  —  ",
+            f"{r['auprc']:.4f}"   if not _isnan(r["auprc"])   else "  —  ",
+            f"{r['f1']:.4f}"      if not _isnan(r["f1"])      else "  —  ",
             f"{r['utility']:.4f}" if not _isnan(r["utility"]) else "  —  ",
             f"{r['ece']:.4f}"     if not _isnan(r["ece"])     else "  —  ",
         ]
