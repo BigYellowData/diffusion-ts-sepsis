@@ -7,7 +7,7 @@
   "physionet_utility": -0.08012195121951225,
   "ece": 0.008830238699682462,
   "auac": 0.0,
-  "corr_uncertainty_error": 0.2584026919047576,
-  "uncertainty_correct": 0.00021161269978620112,
-  "uncertainty_incorrect": 0.0013915629824623466
+  "corr_uncertainty_error": 0.42617041790695476,
+  "uncertainty_correct": 5.3394473070511594e-05,
+  "uncertainty_incorrect": 0.0006849942146800458
 }

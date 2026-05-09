@@ -145,7 +145,7 @@ quantification de l'incertitude bayésienne par Monte Carlo Dropout \cite{gal201
     sepsis qui rééquilibrent un classifieur Transformer.
     \item \textbf{Quantification de l'incertitude par MC Dropout} : production d'un score
     d'incertitude par échantillon, dont la corrélation avec l'erreur (variance
-    $\times 6.6$ plus élevée sur les prédictions incorrectes) permet une stratégie
+    $\times 12.8$ plus élevée sur les prédictions incorrectes) permet une stratégie
     d'abstention clinique.
 \end{enumerate}
 
@@ -453,9 +453,9 @@ La courbe PR est la métrique principale pour les données fortement déséquili
 ECE (Expected Calibration Error) & 0.0088 \\
 Brier score                      & 0.0203 \\
 Score d'utilité PhysioNet        & $-0.080$ \\
-Corrélation incertitude--erreur  & 0.258 \\
-Variance MC --- prédictions correctes   & $2.12 \times 10^{-4}$ \\
-Variance MC --- prédictions incorrectes & $1.39 \times 10^{-3}$ \\
+Corrélation incertitude--erreur  & 0.426 \\
+Variance MC --- prédictions correctes   & $5.34 \times 10^{-5}$ \\
+Variance MC --- prédictions incorrectes & $6.85 \times 10^{-4}$ \\
 Seuil optimal (Youden, val set)  & 0.0178 \\
 \bottomrule
 \end{tabular}
@@ -472,13 +472,13 @@ Seuil optimal (Youden, val set)  & 0.0178 \\
 \hfill
 \begin{subfigure}[b]{0.42\textwidth}
     \includegraphics[width=\textwidth]{figures/uncertainty_dist.pdf}
-    \caption{Variance MC Dropout : erreurs vs corrects (ratio = $\times$6.6)}
+    \caption{Variance MC Dropout : erreurs vs corrects (ratio = $\times$12.8)}
 \end{subfigure}
 \caption{Qualité de calibration et corrélation incertitude--erreur.
 \textbf{Gauche :} le modèle est bien calibré (la courbe orange suit la diagonale),
 et les probabilités prédites pour les cas sepsis se concentrent au-dessus de 0.1,
 distinctes des non-sepsis ($<$0.05). \textbf{Droite :} la variance MC Dropout
-des prédictions incorrectes est 6.6$\times$ supérieure à celle des prédictions
+des prédictions incorrectes est 12.8$\times$ supérieure à celle des prédictions
 correctes, validant l'utilité clinique du score d'incertitude.}
 \end{figure}
 
@@ -636,10 +636,10 @@ pénalise marginalement le F1 à seuil fixe.
 \subsection{Qualité de la calibration et incertitude}
 
 L'ECE de \textbf{0.009} indique une très bonne calibration, propriété essentielle
-en milieu clinique. La corrélation incertitude--erreur de \textbf{0.258} confirme
-l'utilité du MC Dropout : la variance sur les prédictions incorrectes est
-\textbf{6.6 fois plus élevée} que sur les correctes ($1.39\times10^{-3}$ vs
-$2.12\times10^{-4}$).
+en milieu clinique. La corrélation incertitude--erreur de \textbf{0.426} confirme
+l'utilité du MC Dropout : la variance sur les prédictions incorrectes (au seuil
+opérationnel de Youden) est \textbf{12.8 fois plus élevée} que sur les correctes
+($6.85\times10^{-4}$ vs $5.34\times10^{-5}$).
 
 \subsection{Robustesse au ratio de labels}
 
@@ -703,7 +703,7 @@ Les trois contributions sont validées expérimentalement :
     \item \textbf{L'augmentation par diffusion améliore significativement la classification}
     (+7.9 pts AUROC vs Transformer vanilla, +2.7 pts vs BiLSTM supervisé).
     \item \textbf{Le MC Dropout produit des scores d'incertitude utiles} : variance
-    6.6$\times$ plus élevée sur les erreurs, ECE = 0.009.
+    12.8$\times$ plus élevée sur les erreurs, ECE = 0.009.
     \item \textbf{La diffusion surpasse les GAN-based} en stabilité d'entraînement,
     sans effondrement de mode ni oscillation de la loss.
 \end{enumerate}
