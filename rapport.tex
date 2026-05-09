@@ -489,6 +489,100 @@ conservés (les plus incertains sont écartés en premier). À 50\% de couvertur
 alertes conservées est significativement supérieure à la précision de base (2.2\%).}
 \end{figure}
 
+\subsection{Visualisation des trajectoires synthétiques}
+
+Avant d'attribuer le gain de performance à la qualité des échantillons générés,
+il convient de vérifier visuellement que les trajectoires synthétiques produites
+par Diffusion-TS sont cliniquement plausibles. La figure~\ref{fig:traj} compare
+six vraies trajectoires de sepsis (extraites du jeu d'entraînement) à six
+échantillons générés par notre modèle avec guidage conditionnel $c=1$ et
+$\gamma=1.5$, sur cinq signes vitaux clés.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\textwidth]{figures/synthetic_vs_real.pdf}
+\caption{Trajectoires sur 24h de signes vitaux. \textbf{Haut (bleu) :} 6 patients réels
+avec sepsis. \textbf{Bas (orange) :} 6 fenêtres synthétiques générées par Diffusion-TS
+conditionné sur $c=1$ (DDIM, 50 pas, $\gamma=1.5$).}
+\label{fig:traj}
+\end{figure}
+
+Les échantillons synthétiques reproduisent les grandes plages physiologiques
+attendues (HR 50--130, Temp 35--41, MAP 50--130, etc.) ainsi que les variations
+lentes d'amplitude réaliste (pas de discontinuités, pas de plateaux artificiels).
+Les amplitudes sont parfois légèrement plus larges que sur les vrais patients,
+reflet du coefficient de guidance $\gamma=1.5$ qui accentue le caractère
+``pathologique'' au détriment de la diversité fine.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\textwidth]{figures/distribution_real_vs_synth.pdf}
+\caption{Distributions marginales des signes vitaux : valeurs réelles (sepsis,
+$n \approx 2~157$ fenêtres $\times$ 24 pas) vs valeurs générées
+(200 fenêtres synthétiques $\times$ 24 pas). Les distributions se recouvrent
+largement, validant que les trajectoires synthétiques sont statistiquement
+proches des vraies — condition nécessaire à un gain en classification.}
+\label{fig:dist}
+\end{figure}
+
+Cette validation visuelle est essentielle : un gain de classification dû à des
+échantillons aberrants ou trop éloignés de la distribution réelle ne
+généraliserait pas. Ici le recouvrement des distributions confirme que la
+diffusion apprend la bonne variété de données.
+
+\subsection{Exemples qualitatifs (4 cas du test set)}
+
+Pour illustrer concrètement la sortie du modèle, nous présentons quatre cas
+représentatifs extraits du jeu de test, chacun choisi pour mettre en lumière
+un comportement particulier (vrai positif confiant, vrai négatif confiant,
+faux positif incertain, faux négatif silencieux). La table~\ref{tab:cases}
+résume les plages observées des principaux signes vitaux sur la fenêtre 24h
+et la sortie du classifieur.
+
+\begin{table}[H]
+\centering
+\caption{Quatre cas extraits du test set (10\% de labels). Plages des signes vitaux
+observés sur la fenêtre 24h, probabilité prédite par le modèle (moyenne sur 50
+passes MC Dropout), variance associée, et décision binaire au seuil de Youden 0.018.
+Les unités : HR en battements/min, MAP et SBP en mmHg, Temp en °C, Lactate en mmol/L.}
+\label{tab:cases}
+\renewcommand{\arraystretch}{1.3}
+\resizebox{\textwidth}{!}{%
+\begin{tabular}{lccccccccc}
+\toprule
+\textbf{Cas} & \textbf{HR} & \textbf{Temp} & \textbf{MAP} & \textbf{Lactate} &
+\textbf{$y_{\text{vrai}}$} & \textbf{$P(\text{sepsis})$} & \textbf{Var MC ($\times 10^{-3}$)} &
+\textbf{Décision} \\
+\midrule
+TP confiant      & 79--100  & 37.1--38.0 & 67--109 & non mesuré & sepsis & 0.419 & 1.07  & SEPSIS \checkmark \\
+TN confiant      & 52--100  & 36.1--36.7 & 73--96  & non mesuré & sain   & 0.002 & 0.001 & non-sepsis \checkmark \\
+\rowcolor{bestrow}
+\textbf{FP incertain} & 86--\textbf{135} & 36.6--37.7 & 92$\to$\textbf{69} & non mesuré & sain & 0.728 & \textbf{19.5} & SEPSIS $\times$ \\
+FN silencieux    & 62--86   & \textbf{35.0}--36.6 & 80--148 & 0.9--1.3   & sepsis & 0.013 & 0.12  & non-sepsis $\times$ \\
+\bottomrule
+\end{tabular}}
+\end{table}
+
+\paragraph{Interprétation clinique.}
+Le \textbf{FP incertain} illustre l'apport principal du MC Dropout : le modèle
+prédit à tort SEPSIS (la chute brutale de MAP de 92 à 69 mmHg associée à une
+tachycardie marquée à 135 bpm évoque une instabilité hémodynamique compatible
+avec un sepsis), \emph{mais} sa variance ($1.95 \times 10^{-2}$) est près de
+\textbf{20 fois supérieure} à celle d'un TP confiant. Dans un système de surveillance
+en USI, cette variance permettrait de classer cette alerte en \emph{"à vérifier"}
+plutôt qu'en alarme automatique, économisant une intervention non nécessaire tout
+en sollicitant le clinicien sur les cas réellement ambigus.
+
+À l'inverse, le \textbf{FN silencieux} est plus problématique : le modèle rate
+le sepsis (probabilité 0.013, sous le seuil 0.018) \emph{et} sa variance reste
+faible — il ne sait pas qu'il se trompe. Ce cas, caractérisé par une hypothermie
+atypique (35.0\,°C, à l'opposé du tableau classique fébrile) et un MAP large
+mais variable, correspond à une présentation clinique trompeuse que la base
+d'entraînement ne contient pas suffisamment. C'est la limite intrinsèque de
+toute estimation d'incertitude basée uniquement sur la stochasticité interne
+du modèle (incertitude épistémique) : elle ne capture pas l'incertitude
+\emph{aléatoire} due aux données rares ou hors distribution.
+
 \subsection{Ablation : impact du ratio de labels}
 
 \begin{table}[H]

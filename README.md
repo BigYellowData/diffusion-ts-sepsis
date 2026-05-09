@@ -31,6 +31,20 @@ Prédiction + Score d'incertitude
 
 ---
 
+## À quoi ressemblent les trajectoires générées ?
+
+Pour valider que la diffusion produit du cliniquement plausible, on compare des cas **réels** vs **synthétiques** sur 5 signes vitaux.
+
+![Trajectoires : 6 vrais cas de sepsis vs 6 générés par Diffusion-TS](figures/synthetic_vs_real.png)
+
+> Les amplitudes physiologiques (HR 50–130, Temp 35–41, MAP 50–130, Resp 10–35) sont reproduites. Les variations sont lentes et continues, sans plateaux artificiels. Les synthétiques sont parfois légèrement plus larges en amplitude — effet attendu du coefficient de guidance γ=1.5 qui accentue le caractère pathologique.
+
+Et la distribution marginale des 200 échantillons synthétiques recouvre largement celle des ~52 000 pas de temps réels :
+
+![Distributions marginales : réels vs synthétiques](figures/distribution_real_vs_synth.png)
+
+---
+
 ## Résultats (test set, 10% de labels)
 
 | Méthode | Type | AUROC | AUPRC | F1 | Util | ECE |
@@ -47,6 +61,19 @@ Prédiction + Score d'incertitude
 - Seuil calibré par l'indice de Youden sur la validation (seuil optimal = 0.018)
 - Score d'utilité PhysioNet : −0.080 (vs −1.97 avec seuil naïf à 0.5)
 - Variance MC Dropout : ×6.6 plus élevée sur les erreurs → incertitude corrélée aux erreurs
+
+### Exemple concret (4 cas du test set)
+
+Pour chaque cas : plage des signes vitaux observés sur la fenêtre 24h, puis sortie du modèle.
+
+| Cas | HR (bpm) | Temp (°C) | MAP (mmHg) | Lactate | `y_true` | **P(sepsis)** | Var MC ×10⁻³ | Décision |
+|---|---|---|---|---|---|---|---|---|
+| TP confiant | 79–100 | 37.1–38.0 | 67–109 | non mesuré | sepsis | 0.419 | 1.07 | SEPSIS ✓ |
+| TN confiant | 52–100 | 36.1–36.7 | 73–96 | non mesuré | sain | 0.002 | 0.001 | non-sepsis ✓ |
+| **FP incertain** | 86–**135** | 36.6–37.7 | 92→**69** | non mesuré | sain | 0.728 | **19.5** | SEPSIS ✗ |
+| FN | 62–86 | **35.0**–36.6 | 80–148 | 0.9–1.3 | sepsis | 0.013 | 0.12 | non-sepsis ✗ |
+
+> Le **FP incertain** illustre la valeur clinique de MC Dropout : le modèle se trompe (le patient n'est pas septique) **mais sa variance est ×20 supérieure** à celle d'un TP confiant. Un système d'alerte intégrant l'incertitude pourrait signaler ce cas pour vérification humaine plutôt que déclencher une alarme automatique. À l'inverse, le **FN** est un échec silencieux : le modèle rate le sepsis ET ne le signale pas (variance basse) — typiquement un sepsis débutant masqué par une hypothermie atypique.
 
 ### Ablation : ratio de labels
 
