@@ -94,14 +94,21 @@ def uncertainty_correlation(
     y_true: np.ndarray,
     y_prob: np.ndarray,
     uncertainty: np.ndarray,
+    threshold: float = 0.5,
 ) -> dict:
     """
     Analyse whether high uncertainty correlates with model errors.
+
+    The decision threshold should match the operational threshold used
+    elsewhere in the pipeline (Youden-calibrated on val); using a fixed
+    0.5 on a 2.3% positive dataset makes "incorrect" almost equal to
+    "missed positive", which inflates u_correct and deflates the ratio.
+
     Returns a dict with:
       - Pearson correlation (uncertainty, error)
-      - Mean uncertainty for correct vs. incorrect predictions
+      - Mean uncertainty for correct vs. incorrect predictions (at threshold)
     """
-    y_pred = (y_prob >= 0.5).astype(int)
+    y_pred = (y_prob >= threshold).astype(int)
     errors = (y_pred != y_true).astype(float)
 
     corr = float(np.corrcoef(uncertainty, errors)[0, 1])

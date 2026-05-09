@@ -27,7 +27,7 @@ Prédiction + Score d'incertitude
 
 - **Génération conditionnelle par diffusion** — trajectoires synthétiques de sepsis (CFG, γ=1.5) qui rééquilibrent un dataset très déséquilibré
 - **Cadre semi-supervisé** — la diffusion apprend sur 100 % des patients ; seul le guidage utilise les 10 % étiquetés
-- **Incertitude bayésienne via MC Dropout** — variance ×6.6 plus élevée sur les erreurs : le modèle sait quand il hésite
+- **Incertitude bayésienne via MC Dropout** — variance ×12.8 plus élevée sur les erreurs : le modèle sait quand il hésite
 
 ---
 
@@ -60,7 +60,7 @@ Et la distribution marginale des 200 échantillons synthétiques recouvre largem
 
 - Seuil calibré par l'indice de Youden sur la validation (seuil optimal = 0.018)
 - Score d'utilité PhysioNet : −0.080 (vs −1.97 avec seuil naïf à 0.5)
-- Variance MC Dropout : ×6.6 plus élevée sur les erreurs → incertitude corrélée aux erreurs
+- Variance MC Dropout : ×12.8 plus élevée sur les erreurs (au seuil opérationnel) → incertitude corrélée aux erreurs (Pearson r = 0.43)
 
 ### Exemple concret (4 cas du test set)
 

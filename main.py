@@ -155,9 +155,11 @@ def stage_evaluate(cfg: dict, data: dict, device: torch.device) -> None:
         val_loader=loaders["val"],
     )
 
-    # Uncertainty–error correlation
+    # Uncertainty–error correlation, evaluated at the operational threshold
+    threshold = results["metrics"]["threshold"]
     unc_stats = uncertainty_correlation(
-        results["y_true"], results["mean_prob"], results["uncertainty"]
+        results["y_true"], results["mean_prob"], results["uncertainty"],
+        threshold=threshold,
     )
     results["metrics"].update(unc_stats)
 
