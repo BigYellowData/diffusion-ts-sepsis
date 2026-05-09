@@ -146,11 +146,17 @@ Pour parcourir le pipeline en mode interactif (sans ré-entraîner) :
 uv run jupyter lab notebooks/demo.ipynb
 ```
 
-Le notebook charge les checkpoints existants et illustre, cellule par cellule :
-chargement du dataset, génération de trajectoires synthétiques par diffusion,
-prédiction avec MC Dropout sur 4 cas représentatifs (TP, TN, FP incertain, FN),
-et lecture des métriques globales. Les sorties sont déjà peuplées dans le fichier
-livré ; on peut le lire sans l'exécuter.
+Le notebook charge les checkpoints et illustre, cellule par cellule : chargement du
+dataset, génération de trajectoires synthétiques par diffusion, prédiction avec
+MC Dropout sur 4 cas représentatifs (TP, TN, FP incertain, FN), et lecture des
+métriques globales.
+
+**Pré-requis pour exécuter le notebook :**
+- Les checkpoints `checkpoints/diffusion_best.pt` et `checkpoints/classifier_best.pt` sont **inclus dans le repo** (~4 MB combinés).
+- Les résultats déjà calculés (`results/*.npy`, `results/metrics.json`) sont aussi inclus.
+- En revanche `data/processed/splits.npz` (924 MB) n'est pas dans le repo : pour exécuter les cellules qui affichent un patient réel, il faut au préalable lancer `uv run python main.py --stage preprocess` (~4 min).
+
+Les sorties du notebook sont déjà peuplées dans le fichier livré, donc **on peut le lire intégralement sans l'exécuter**.
 
 ---
 

@@ -4,14 +4,26 @@ __pycache__/
 *.pyo
 .venv/
 
-# Data & checkpoints (trop lourds pour git)
+# Data & checkpoints
+# Note : data/processed/splits.npz fait 924 MB (hors limite GitHub)
 data/raw/
 data/processed/
-checkpoints/
+
+# checkpoints/ : on garde uniquement les "best" (utilisés par le notebook)
+checkpoints/*
+!checkpoints/diffusion_best.pt
+!checkpoints/classifier_best.pt
 checkpoints_test/
+
 logs/
 logs_test/
-results/
+
+# results/ : on garde tout (fichiers petits, < 100 KB chacun)
+results/*
+!results/y_true.npy
+!results/mean_prob.npy
+!results/uncertainty.npy
+!results/metrics.json
 
 # Jupyter
 .ipynb_checkpoints/
