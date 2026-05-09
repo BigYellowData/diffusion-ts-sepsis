@@ -237,6 +237,7 @@ diffusion-ts-sepsis/
 │   └── metrics.json                 # AUROC, AUPRC, F1, ECE, Util, etc.
 │
 ├── figures/                         # Figures du rapport (PDF + PNG)
+|   ├── abstention.pdf
 │   ├── roc_curve.pdf, pr_curve.pdf
 │   ├── calibration.pdf, uncertainty_dist.pdf
 │   ├── synthetic_vs_real.{pdf,png}            # 6 trajectoires réelles vs 6 synthétiques
